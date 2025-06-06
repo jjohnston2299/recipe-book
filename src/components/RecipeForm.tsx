@@ -12,6 +12,7 @@ interface FormData {
   cookTime: number;
   cuisineType: string;
   tags: string[];
+  description: string;
 }
 
 interface RecipeFormProps {
@@ -25,6 +26,7 @@ interface RecipeFormProps {
     cookTime: number;
     cuisineType: string;
     tags: string[];
+    description: string;
   };
   onCancel?: () => void;
   onSuccess?: () => void;
@@ -41,10 +43,14 @@ export default function RecipeForm({ recipe, onCancel, onSuccess }: RecipeFormPr
       cookTime: 0,
       cuisineType: '',
       tags: [],
+      description: '',
     }
   );
 
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isGeneratingDesc, setIsGeneratingDesc] = useState(false);
+  const [isGeneratingTags, setIsGeneratingTags] = useState(false);
+  const [isGeneratingComplete, setIsGeneratingComplete] = useState(false);
   const [imagePreview, setImagePreview] = useState<string | null>(
     recipe?.imageUrl || null
   );
@@ -158,6 +164,115 @@ export default function RecipeForm({ recipe, onCancel, onSuccess }: RecipeFormPr
     });
   };
 
+  const generateDescription = async () => {
+    if (!formData.title || formData.ingredients.length === 0 || formData.instructions.length === 0) {
+      alert('Please fill in the title, ingredients, and instructions first.');
+      return;
+    }
+
+    setIsGeneratingDesc(true);
+
+    try {
+      const response = await fetch('/api/ai', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'generate-description',
+          title: formData.title,
+          ingredients: formData.ingredients.filter(i => i.trim()),
+          instructions: formData.instructions.filter(i => i.trim())
+        })
+      });
+
+      if (!response.ok) throw new Error('Failed to generate description');
+      const { description } = await response.json();
+
+      setFormData(prev => ({
+        ...prev,
+        description
+      }));
+    } catch (error) {
+      console.error('Error generating description:', error);
+      alert('Failed to generate description. Please try again.');
+    } finally {
+      setIsGeneratingDesc(false);
+    }
+  };
+
+  const generateTags = async () => {
+    if (!formData.title || formData.ingredients.length === 0 || formData.instructions.length === 0) {
+      alert('Please fill in the title, ingredients, and instructions first.');
+      return;
+    }
+
+    setIsGeneratingTags(true);
+
+    try {
+      const response = await fetch('/api/ai', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'suggest-tags',
+          title: formData.title,
+          ingredients: formData.ingredients.filter(i => i.trim()),
+          instructions: formData.instructions.filter(i => i.trim())
+        })
+      });
+
+      if (!response.ok) throw new Error('Failed to generate tags');
+      const { tags } = await response.json();
+
+      setFormData(prev => ({
+        ...prev,
+        tags: [...new Set([...prev.tags, ...tags])].slice(0, 3)
+      }));
+    } catch (error) {
+      console.error('Error generating tags:', error);
+      alert('Failed to generate tags. Please try again.');
+    } finally {
+      setIsGeneratingTags(false);
+    }
+  };
+
+  const generateCompleteRecipe = async () => {
+    if (!formData.title) {
+      alert('Please enter a recipe title first.');
+      return;
+    }
+
+    setIsGeneratingComplete(true);
+
+    try {
+      const response = await fetch('/api/ai', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'generate-complete',
+          title: formData.title
+        })
+      });
+
+      if (!response.ok) throw new Error('Failed to generate recipe');
+      const { recipe: generatedRecipe } = await response.json();
+
+      setFormData(prev => ({
+        ...prev,
+        description: generatedRecipe.description,
+        ingredients: generatedRecipe.ingredients,
+        instructions: generatedRecipe.instructions,
+        prepTime: generatedRecipe.prepTime,
+        cookTime: generatedRecipe.cookTime,
+        cuisineType: generatedRecipe.cuisineType,
+        tags: generatedRecipe.tags
+      }));
+    } catch (error) {
+      console.error('Error generating complete recipe:', error);
+      alert('Failed to generate recipe. Please try again.');
+    } finally {
+      setIsGeneratingComplete(false);
+    }
+  };
+
   return (
     <div className="max-w-4xl mx-auto py-8 px-4">
       <div className="bg-white rounded-lg shadow-lg overflow-hidden">
@@ -214,14 +329,53 @@ export default function RecipeForm({ recipe, onCancel, onSuccess }: RecipeFormPr
         </div>
 
         <form onSubmit={handleSubmit} className="p-6">
-          <input
-            type="text"
-            required
-            value={formData.title}
-            onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-            className="w-full text-3xl font-bold mb-4 border-0 focus:ring-0 p-0 text-[#819A91] placeholder-[#A7C1A8]"
-            placeholder="Recipe Title"
-          />
+          <div className="flex items-center justify-between mb-4">
+            <input
+              type="text"
+              required
+              value={formData.title}
+              onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+              className="flex-1 text-3xl font-bold border-0 focus:ring-0 p-0 text-[#819A91] placeholder-[#A7C1A8]"
+              placeholder="Recipe Title"
+            />
+            <button
+              type="button"
+              onClick={generateCompleteRecipe}
+              disabled={isGeneratingComplete || !formData.title}
+              className={`ml-4 text-sm px-4 py-2 rounded ${
+                isGeneratingComplete || !formData.title
+                  ? 'bg-[#D1D8BE] cursor-not-allowed'
+                  : 'bg-[#819A91] text-white hover:bg-[#A7C1A8]'
+              } transition-colors whitespace-nowrap`}
+            >
+              {isGeneratingComplete ? 'Generating Recipe...' : 'Generate Complete Recipe'}
+            </button>
+          </div>
+
+          <div className="mb-6">
+            <div className="flex items-center justify-between mb-2">
+              <label className="block text-[#819A91] font-medium">Description</label>
+              <button
+                type="button"
+                onClick={generateDescription}
+                disabled={isGeneratingDesc}
+                className={`text-sm px-3 py-1 rounded ${
+                  isGeneratingDesc
+                    ? 'bg-[#D1D8BE] cursor-not-allowed'
+                    : 'bg-[#819A91] text-white hover:bg-[#A7C1A8]'
+                } transition-colors`}
+              >
+                {isGeneratingDesc ? 'Generating...' : 'Generate Description'}
+              </button>
+            </div>
+            <textarea
+              value={formData.description}
+              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+              className="w-full rounded-md border-[#D1D8BE] focus:ring-[#819A91] focus:border-[#819A91] text-[#819A91]"
+              rows={3}
+              placeholder="Describe your recipe..."
+            />
+          </div>
 
           <div className="flex flex-wrap gap-4 mb-6">
             <div className="flex items-center text-[#819A91]">
@@ -373,15 +527,65 @@ export default function RecipeForm({ recipe, onCancel, onSuccess }: RecipeFormPr
             </div>
           </div>
 
-          <div className="mt-6">
-            <h2 className="text-xl font-semibold mb-2 text-[#819A91]">Tags</h2>
-            <input
-              type="text"
-              value={formData.tags.join(', ')}
-              onChange={(e) => setFormData({ ...formData, tags: e.target.value.split(',').map(tag => tag.trim()) })}
-              className="w-full border-[#D1D8BE] rounded-md focus:border-[#A7C1A8] focus:ring-[#A7C1A8] text-[#819A91] placeholder-[#A7C1A8]"
-              placeholder="Enter tags separated by commas"
-            />
+          <div className="mt-12 mb-6">
+            <div className="flex items-center justify-between mb-2">
+              <label className="block text-[#819A91] font-medium">Tags <span className="text-sm text-[#A7C1A8]">({formData.tags.length}/3)</span></label>
+              <button
+                type="button"
+                onClick={generateTags}
+                disabled={isGeneratingTags}
+                className={`text-sm px-3 py-1 rounded ${
+                  isGeneratingTags
+                    ? 'bg-[#D1D8BE] cursor-not-allowed'
+                    : 'bg-[#819A91] text-white hover:bg-[#A7C1A8]'
+                } transition-colors`}
+              >
+                {isGeneratingTags ? 'Generating...' : 'Generate Tags'}
+              </button>
+            </div>
+            <div className="flex flex-wrap gap-2 mb-2">
+              {formData.tags.map((tag, index) => (
+                <span
+                  key={index}
+                  className="bg-[#F5F6F0] text-[#819A91] px-3 py-1 rounded-full flex items-center gap-2"
+                >
+                  {tag}
+                  <button
+                    type="button"
+                    onClick={() => setFormData(prev => ({
+                      ...prev,
+                      tags: prev.tags.filter((_, i) => i !== index)
+                    }))}
+                    className="text-[#819A91] hover:text-red-500"
+                  >
+                    ×
+                  </button>
+                </span>
+              ))}
+            </div>
+            {formData.tags.length < 3 && (
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  placeholder="Add a tag"
+                  className="flex-1 rounded-md border-[#D1D8BE] focus:ring-[#819A91] focus:border-[#819A91] text-[#819A91]"
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      const input = e.currentTarget;
+                      const value = input.value.trim();
+                      if (value && !formData.tags.includes(value) && formData.tags.length < 3) {
+                        setFormData(prev => ({
+                          ...prev,
+                          tags: [...prev.tags, value]
+                        }));
+                        input.value = '';
+                      }
+                    }
+                  }}
+                />
+              </div>
+            )}
           </div>
 
           {uploadProgress === 'uploading' && (

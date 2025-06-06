@@ -179,16 +179,16 @@ export default function Home() {
             </div>
 
             {/* Vertical Separator */}
-            <div className="self-center h-6 w-px bg-[#D1D8BE] mx-2" />
+            <div className="hidden sm:block self-center h-6 w-px bg-[#D1D8BE] mx-2" />
 
             {/* Time Filter */}
-            <div className="flex-1 flex items-center gap-4 min-w-0">
+            <div className="flex-1 flex items-center gap-2 min-w-0">
               <div className="min-w-[140px] flex justify-end">
                 <label htmlFor="time-filter" className="text-[#819A91] font-medium whitespace-nowrap">
                   Max Time: <span className="inline-block min-w-[60px]">{formatTime(maxTotalTime)}</span>
                 </label>
               </div>
-              <div className="flex-1 flex items-center gap-2 min-w-[200px]">
+              <div className="flex-1 flex items-center gap-2 min-w-[200px] max-w-[275px]">
                 <span className="text-[#819A91] text-sm whitespace-nowrap w-[30px]">30m</span>
                 <input
                   type="range"

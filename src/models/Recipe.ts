@@ -6,6 +6,11 @@ const RecipeSchema = new mongoose.Schema({
     required: true,
     trim: true,
   },
+  description: {
+    type: String,
+    required: false,
+    default: '',
+  },
   ingredients: [{
     type: String,
     required: true,

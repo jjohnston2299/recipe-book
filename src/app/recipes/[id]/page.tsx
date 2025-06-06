@@ -16,6 +16,7 @@ const caveat = Caveat({
 interface Recipe {
   _id: string;
   title: string;
+  description: string;
   ingredients: string[];
   instructions: string[];
   imageUrl: string;
@@ -61,7 +62,7 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
 
   return {
     title: recipe.title,
-    description: `${recipe.title} - A ${recipe.cuisineType} recipe that takes ${recipe.prepTime + recipe.cookTime} minutes to prepare.`,
+    description: recipe.description || `${recipe.title} - A ${recipe.cuisineType} recipe that takes ${recipe.prepTime + recipe.cookTime} minutes to prepare.`,
   };
 }
 
@@ -134,6 +135,12 @@ export default async function RecipePage({ params }: { params: { id: string } })
 
         <div className="p-6">
           <h1 className="text-3xl font-bold mb-4 text-[#819A91]">{recipe.title}</h1>
+
+          {recipe.description && (
+            <p className="text-[#819A91] mb-6 italic text-lg">
+              {recipe.description}
+            </p>
+          )}
 
           <div className="flex flex-wrap gap-4 mb-6">
             <div className="flex items-center text-[#819A91]">
