@@ -1,7 +1,7 @@
 import './globals.css'
 import { Inter, Caveat } from 'next/font/google'
 import { Edu_SA_Beginner } from 'next/font/google'
-import Link from 'next/link'
+import { LayoutWrapper } from './LayoutWrapper'
 
 const inter = Inter({ subsets: ['latin'] })
 const eduSA = Edu_SA_Beginner({ 
@@ -26,19 +26,9 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${inter.className} ${eduSA.variable} bg-[#F5F6F0]`}>
-        <nav className="bg-[#819A91] text-white p-4 shadow-md">
-          <div className="container mx-auto">
-            <Link 
-              href="/" 
-              className={`${caveat.className} text-2xl font-bold hover:text-[#D1D8BE] transition-colors`}
-            >
-              Recipe Book
-            </Link>
-          </div>
-        </nav>
-        <main className="container mx-auto px-4 py-8">
+        <LayoutWrapper caveatClassName={caveat.className}>
           {children}
-        </main>
+        </LayoutWrapper>
       </body>
     </html>
   )

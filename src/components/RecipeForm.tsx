@@ -2,6 +2,7 @@
 
 import { useState, FormEvent } from 'react';
 import Image from 'next/image';
+import { useAIFeatures } from '@/context/AIFeaturesContext';
 
 interface FormData {
   title: string;
@@ -33,6 +34,7 @@ interface RecipeFormProps {
 }
 
 export default function RecipeForm({ recipe, onCancel, onSuccess }: RecipeFormProps) {
+  const showAIFeatures = useAIFeatures();
   const [formData, setFormData] = useState<FormData>(
     recipe || {
       title: '',
@@ -338,35 +340,39 @@ export default function RecipeForm({ recipe, onCancel, onSuccess }: RecipeFormPr
               className="flex-1 text-3xl font-bold border-0 focus:ring-0 p-0 text-[#819A91] placeholder-[#A7C1A8]"
               placeholder="Recipe Title"
             />
-            <button
-              type="button"
-              onClick={generateCompleteRecipe}
-              disabled={isGeneratingComplete || !formData.title}
-              className={`ml-4 text-sm px-4 py-2 rounded ${
-                isGeneratingComplete || !formData.title
-                  ? 'bg-[#D1D8BE] cursor-not-allowed'
-                  : 'bg-[#819A91] text-white hover:bg-[#A7C1A8]'
-              } transition-colors whitespace-nowrap`}
-            >
-              {isGeneratingComplete ? 'Generating Recipe...' : 'Generate Complete Recipe'}
-            </button>
+            {showAIFeatures && (
+              <button
+                type="button"
+                onClick={generateCompleteRecipe}
+                disabled={isGeneratingComplete || !formData.title}
+                className={`ml-4 text-sm px-4 py-2 rounded ${
+                  isGeneratingComplete || !formData.title
+                    ? 'bg-[#D1D8BE] cursor-not-allowed'
+                    : 'bg-[#819A91] text-white hover:bg-[#A7C1A8]'
+                } transition-colors whitespace-nowrap`}
+              >
+                {isGeneratingComplete ? 'Generating Recipe...' : 'Generate Complete Recipe'}
+              </button>
+            )}
           </div>
 
           <div className="mb-6">
             <div className="flex items-center justify-between mb-2">
               <label className="block text-[#819A91] font-medium">Description</label>
-              <button
-                type="button"
-                onClick={generateDescription}
-                disabled={isGeneratingDesc}
-                className={`text-sm px-3 py-1 rounded ${
-                  isGeneratingDesc
-                    ? 'bg-[#D1D8BE] cursor-not-allowed'
-                    : 'bg-[#819A91] text-white hover:bg-[#A7C1A8]'
-                } transition-colors`}
-              >
-                {isGeneratingDesc ? 'Generating...' : 'Generate Description'}
-              </button>
+              {showAIFeatures && (
+                <button
+                  type="button"
+                  onClick={generateDescription}
+                  disabled={isGeneratingDesc}
+                  className={`text-sm px-3 py-1 rounded ${
+                    isGeneratingDesc
+                      ? 'bg-[#D1D8BE] cursor-not-allowed'
+                      : 'bg-[#819A91] text-white hover:bg-[#A7C1A8]'
+                  } transition-colors`}
+                >
+                  {isGeneratingDesc ? 'Generating...' : 'Generate Description'}
+                </button>
+              )}
             </div>
             <textarea
               value={formData.description}
@@ -530,18 +536,20 @@ export default function RecipeForm({ recipe, onCancel, onSuccess }: RecipeFormPr
           <div className="mt-12 mb-6">
             <div className="flex items-center justify-between mb-2">
               <label className="block text-[#819A91] font-medium">Tags <span className="text-sm text-[#A7C1A8]">({formData.tags.length}/3)</span></label>
-              <button
-                type="button"
-                onClick={generateTags}
-                disabled={isGeneratingTags}
-                className={`text-sm px-3 py-1 rounded ${
-                  isGeneratingTags
-                    ? 'bg-[#D1D8BE] cursor-not-allowed'
-                    : 'bg-[#819A91] text-white hover:bg-[#A7C1A8]'
-                } transition-colors`}
-              >
-                {isGeneratingTags ? 'Generating...' : 'Generate Tags'}
-              </button>
+              {showAIFeatures && (
+                <button
+                  type="button"
+                  onClick={generateTags}
+                  disabled={isGeneratingTags}
+                  className={`text-sm px-3 py-1 rounded ${
+                    isGeneratingTags
+                      ? 'bg-[#D1D8BE] cursor-not-allowed'
+                      : 'bg-[#819A91] text-white hover:bg-[#A7C1A8]'
+                  } transition-colors`}
+                >
+                  {isGeneratingTags ? 'Generating...' : 'Generate Tags'}
+                </button>
+              )}
             </div>
             <div className="flex flex-wrap gap-2 mb-2">
               {formData.tags.map((tag, index) => (
