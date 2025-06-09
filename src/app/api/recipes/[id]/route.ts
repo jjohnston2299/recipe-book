@@ -91,7 +91,7 @@ export async function PUT(
     }
 
     // Remove _id and clean the updates
-    const { _id: ignored, ...updateData } = updates;
+    const { _id, ...updateData } = updates;
     const cleanedUpdates = {
       ...updateData,
       ingredients: updates.ingredients.filter((i: string) => i.trim()),
