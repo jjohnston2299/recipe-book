@@ -30,20 +30,15 @@ async function deleteCloudflareImage(imageUrl: string) {
   }
 }
 
-type RouteParams = {
-  params: {
-    id: string;
-  };
-};
-
 export async function GET(
   request: Request,
-  { params }: RouteParams
+  { params }: { params: Promise<{ id: string }> }
 ): Promise<NextResponse> {
   try {
+    const { id } = await params;
     const db = await getDb();
     const recipe = await db.collection('recipes').findOne({
-      _id: new ObjectId(params.id)
+      _id: new ObjectId(id)
     });
 
     if (!recipe) {
@@ -73,15 +68,16 @@ export async function GET(
 
 export async function PUT(
   request: Request,
-  { params }: RouteParams
+  { params }: { params: Promise<{ id: string }> }
 ): Promise<NextResponse> {
   try {
+    const { id } = await params;
     const updates = await request.json();
     const db = await getDb();
 
     // Get the current recipe to check if image needs to be deleted
     const currentRecipe = await db.collection('recipes').findOne({
-      _id: new ObjectId(params.id)
+      _id: new ObjectId(id)
     });
 
     if (!currentRecipe) {
@@ -110,7 +106,7 @@ export async function PUT(
     };
 
     const result = await db.collection('recipes').findOneAndUpdate(
-      { _id: new ObjectId(params.id) },
+      { _id: new ObjectId(id) },
       { $set: cleanedUpdates },
       { returnDocument: 'after' }
     );
@@ -134,14 +130,15 @@ export async function PUT(
 
 export async function DELETE(
   request: Request,
-  { params }: RouteParams
+  { params }: { params: Promise<{ id: string }> }
 ): Promise<NextResponse> {
   try {
+    const { id } = await params;
     const db = await getDb();
 
     // Get the recipe first to get the image URL
     const recipe = await db.collection('recipes').findOne({
-      _id: new ObjectId(params.id)
+      _id: new ObjectId(id)
     });
 
     if (!recipe) {
@@ -158,7 +155,7 @@ export async function DELETE(
 
     // Delete the recipe from MongoDB
     const result = await db.collection('recipes').deleteOne({
-      _id: new ObjectId(params.id)
+      _id: new ObjectId(id)
     });
 
     if (result.deletedCount === 0) {
