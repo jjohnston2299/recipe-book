@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import EditRecipeForm from '@/components/EditRecipeForm/EditRecipeForm';
+import RecipeForm from '@/components/RecipeForm/RecipeForm';
 import { Recipe } from '@/types/recipe';
 import { EDIT_RECIPE } from '@/constants';
 
@@ -41,7 +41,7 @@ export default function EditButton({ recipe }: { recipe: Recipe }) {
               </svg>
             </button>
           </div>
-          <EditRecipeForm recipe={recipe} onCancel={() => setIsEditing(false)} onSuccess={handleEditComplete} />
+          <RecipeForm recipe={recipe} onCancel={() => setIsEditing(false)} onSuccess={handleEditComplete} />
         </div>
       </div>
     );
