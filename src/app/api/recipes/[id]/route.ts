@@ -33,7 +33,7 @@ async function deleteCloudflareImage(imageUrl: string) {
 export async function GET(
   request: Request,
   { params }: { params: { id: string } }
-) {
+): Promise<NextResponse> {
   try {
     const db = await getDb();
     const recipe = await db.collection('recipes').findOne({
@@ -68,7 +68,7 @@ export async function GET(
 export async function PUT(
   request: Request,
   { params }: { params: { id: string } }
-) {
+): Promise<NextResponse> {
   try {
     const updates = await request.json();
     const db = await getDb();
@@ -92,7 +92,7 @@ export async function PUT(
 
     // Remove _id and clean the updates
     const { _id, ...updateData } = updates;
-     console.log(_id)
+    console.log(_id);
     const cleanedUpdates = {
       ...updateData,
       ingredients: updates.ingredients.filter((i: string) => i.trim()),
@@ -128,7 +128,7 @@ export async function PUT(
 export async function DELETE(
   request: Request,
   { params }: { params: { id: string } }
-) {
+): Promise<NextResponse> {
   try {
     const db = await getDb();
 
