@@ -1,4 +1,5 @@
 import '@testing-library/jest-dom';
+import { Request, Response } from 'node-fetch';
 
 // Mock Next.js router
 jest.mock('next/navigation', () => ({
@@ -22,4 +23,8 @@ jest.mock('next/image', () => ({
     // eslint-disable-next-line jsx-a11y/alt-text, @next/next/no-img-element
     return <img {...props} />;
   },
-})); 
+}));
+
+// Add Request and Response to the global scope for Next.js API route testing
+global.Request = Request;
+global.Response = Response; 

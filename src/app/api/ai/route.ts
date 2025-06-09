@@ -7,14 +7,32 @@ export async function POST(request: Request) {
 
     switch (action) {
       case 'generate-description':
+        if (!title || !ingredients?.length || !instructions?.length) {
+          return NextResponse.json(
+            { error: 'Failed to process AI request', details: 'Missing required fields' },
+            { status: 500 }
+          );
+        }
         const description = await generateRecipeDescription(title, ingredients, instructions);
         return NextResponse.json({ description });
 
       case 'suggest-tags':
+        if (!title || !ingredients?.length || !instructions?.length) {
+          return NextResponse.json(
+            { error: 'Failed to process AI request', details: 'Missing required fields' },
+            { status: 500 }
+          );
+        }
         const tags = await suggestRecipeTags(title, ingredients, instructions);
         return NextResponse.json({ tags });
 
       case 'generate-complete':
+        if (!title) {
+          return NextResponse.json(
+            { error: 'Failed to process AI request', details: 'Missing required fields' },
+            { status: 500 }
+          );
+        }
         const recipe = await generateCompleteRecipe(title);
         return NextResponse.json({ recipe });
 
