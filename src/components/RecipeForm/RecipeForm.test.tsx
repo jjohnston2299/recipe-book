@@ -1,4 +1,4 @@
-import { render, screen, fireEvent, waitFor, act } from '@/utils/test-utils';
+import { render, screen, fireEvent, waitFor } from '@/utils/test-utils';
 import RecipeForm from './RecipeForm';
 import { RECIPE_FORM } from '@/constants';
 import '@testing-library/jest-dom';

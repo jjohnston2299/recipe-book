@@ -24,7 +24,7 @@ jest.mock('@/lib/openai', () => ({
 }));
 
 describe('AI API Route', () => {
-  const mockRequest = (body: any) =>
+  const mockRequest = (body: Record<string, unknown>) =>
     new Request('http://localhost:3000/api/ai', {
       method: 'POST',
       headers: {
