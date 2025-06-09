@@ -37,12 +37,12 @@ async function deleteCloudflareImage(imageUrl: string) {
 
 export async function GET(
   request: Request,
-  context: RouteParams
+  { params }: { params: { id: string } }
 ): Promise<NextResponse> {
   try {
     const db = await getDb();
     const recipe = await db.collection('recipes').findOne({
-      _id: new ObjectId(context.params.id)
+      _id: new ObjectId(params.id)
     });
 
     if (!recipe) {
@@ -72,7 +72,7 @@ export async function GET(
 
 export async function PUT(
   request: Request,
-  context: RouteParams
+  { params }: { params: { id: string } }
 ): Promise<NextResponse> {
   try {
     const updates = await request.json();
@@ -80,7 +80,7 @@ export async function PUT(
 
     // Get the current recipe to check if image needs to be deleted
     const currentRecipe = await db.collection('recipes').findOne({
-      _id: new ObjectId(context.params.id)
+      _id: new ObjectId(params.id)
     });
 
     if (!currentRecipe) {
@@ -109,7 +109,7 @@ export async function PUT(
     };
 
     const result = await db.collection('recipes').findOneAndUpdate(
-      { _id: new ObjectId(context.params.id) },
+      { _id: new ObjectId(params.id) },
       { $set: cleanedUpdates },
       { returnDocument: 'after' }
     );
@@ -133,14 +133,14 @@ export async function PUT(
 
 export async function DELETE(
   request: Request,
-  context: RouteParams
+  { params }: { params: { id: string } }
 ): Promise<NextResponse> {
   try {
     const db = await getDb();
 
     // Get the recipe first to get the image URL
     const recipe = await db.collection('recipes').findOne({
-      _id: new ObjectId(context.params.id)
+      _id: new ObjectId(params.id)
     });
 
     if (!recipe) {
@@ -157,7 +157,7 @@ export async function DELETE(
 
     // Delete the recipe from MongoDB
     const result = await db.collection('recipes').deleteOne({
-      _id: new ObjectId(context.params.id)
+      _id: new ObjectId(params.id)
     });
 
     if (result.deletedCount === 0) {
