@@ -2,6 +2,11 @@ import { NextResponse } from 'next/server';
 import { getDb } from '@/lib/mongodb';
 import { ObjectId } from 'mongodb';
 
+type RouteParams = {
+  params: { id: string };
+  searchParams: { [key: string]: string | string[] | undefined };
+};
+
 // Helper function to delete image from Cloudflare
 async function deleteCloudflareImage(imageUrl: string) {
   try {
@@ -32,12 +37,12 @@ async function deleteCloudflareImage(imageUrl: string) {
 
 export async function GET(
   request: Request,
-  { params }: { params: { id: string } }
+  context: RouteParams
 ): Promise<NextResponse> {
   try {
     const db = await getDb();
     const recipe = await db.collection('recipes').findOne({
-      _id: new ObjectId(params.id)
+      _id: new ObjectId(context.params.id)
     });
 
     if (!recipe) {
@@ -67,7 +72,7 @@ export async function GET(
 
 export async function PUT(
   request: Request,
-  { params }: { params: { id: string } }
+  context: RouteParams
 ): Promise<NextResponse> {
   try {
     const updates = await request.json();
@@ -75,7 +80,7 @@ export async function PUT(
 
     // Get the current recipe to check if image needs to be deleted
     const currentRecipe = await db.collection('recipes').findOne({
-      _id: new ObjectId(params.id)
+      _id: new ObjectId(context.params.id)
     });
 
     if (!currentRecipe) {
@@ -104,7 +109,7 @@ export async function PUT(
     };
 
     const result = await db.collection('recipes').findOneAndUpdate(
-      { _id: new ObjectId(params.id) },
+      { _id: new ObjectId(context.params.id) },
       { $set: cleanedUpdates },
       { returnDocument: 'after' }
     );
@@ -128,14 +133,14 @@ export async function PUT(
 
 export async function DELETE(
   request: Request,
-  { params }: { params: { id: string } }
+  context: RouteParams
 ): Promise<NextResponse> {
   try {
     const db = await getDb();
 
     // Get the recipe first to get the image URL
     const recipe = await db.collection('recipes').findOne({
-      _id: new ObjectId(params.id)
+      _id: new ObjectId(context.params.id)
     });
 
     if (!recipe) {
@@ -152,7 +157,7 @@ export async function DELETE(
 
     // Delete the recipe from MongoDB
     const result = await db.collection('recipes').deleteOne({
-      _id: new ObjectId(params.id)
+      _id: new ObjectId(context.params.id)
     });
 
     if (result.deletedCount === 0) {
