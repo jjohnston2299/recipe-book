@@ -3,35 +3,10 @@
 import { useState, FormEvent } from 'react';
 import Image from 'next/image';
 import { useAIFeatures } from '@/context/AIFeaturesContext';
+import { Recipe, RecipeFormProps } from '@/types/recipe';
+import { RECIPE_FORM } from '@/constants';
 
-interface FormData {
-  title: string;
-  ingredients: string[];
-  instructions: string[];
-  imageUrl: string;
-  prepTime: number;
-  cookTime: number;
-  cuisineType: string;
-  tags: string[];
-  description: string;
-}
-
-interface RecipeFormProps {
-  recipe?: {
-    _id: string;
-    title: string;
-    ingredients: string[];
-    instructions: string[];
-    imageUrl: string;
-    prepTime: number;
-    cookTime: number;
-    cuisineType: string;
-    tags: string[];
-    description: string;
-  };
-  onCancel?: () => void;
-  onSuccess?: () => void;
-}
+interface FormData extends Omit<Recipe, '_id'> {}
 
 export default function RecipeForm({ recipe, onCancel, onSuccess }: RecipeFormProps) {
   const showAIFeatures = useAIFeatures();
@@ -62,39 +37,35 @@ export default function RecipeForm({ recipe, onCancel, onSuccess }: RecipeFormPr
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Create a preview URL
     const previewUrl = URL.createObjectURL(file);
     setImagePreview(previewUrl);
     setUploadProgress('uploading');
 
     try {
-      // Create FormData for the file upload
       const formData = new FormData();
       formData.append('file', file);
 
-      // Upload to our API endpoint
       const response = await fetch('/api/images', {
         method: 'POST',
         body: formData,
       });
 
       if (!response.ok) {
-        throw new Error('Failed to upload image');
+        throw new Error(RECIPE_FORM.ERRORS.UPLOAD_FAILED);
       }
 
       const result = await response.json();
 
       if (!result.success) {
-        throw new Error(result.error || 'Failed to upload image');
+        throw new Error(result.error || RECIPE_FORM.ERRORS.UPLOAD_FAILED);
       }
 
-      // Store the image URL
       setFormData(prev => ({ ...prev, imageUrl: result.url }));
       setUploadProgress('done');
     } catch (error) {
       console.error('Error uploading image:', error);
       setUploadProgress('error');
-      alert('Failed to upload image. Please try again.');
+      alert(RECIPE_FORM.ERRORS.UPLOAD_FAILED);
     }
   };
 
@@ -103,7 +74,6 @@ export default function RecipeForm({ recipe, onCancel, onSuccess }: RecipeFormPr
     setIsSubmitting(true);
 
     try {
-      // Filter out empty ingredients and instructions
       const cleanedData = {
         ...formData,
         ingredients: formData.ingredients.filter(i => i.trim()),
@@ -122,7 +92,7 @@ export default function RecipeForm({ recipe, onCancel, onSuccess }: RecipeFormPr
       });
 
       if (!response.ok) {
-        throw new Error(recipe ? 'Failed to update recipe' : 'Failed to create recipe');
+        throw new Error(RECIPE_FORM.ERRORS.SAVE_FAILED);
       }
 
       if (recipe && onSuccess) {
@@ -132,43 +102,15 @@ export default function RecipeForm({ recipe, onCancel, onSuccess }: RecipeFormPr
       }
     } catch (error) {
       console.error('Error saving recipe:', error);
-      alert('Failed to save recipe. Please try again.');
+      alert(RECIPE_FORM.ERRORS.SAVE_FAILED);
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const addIngredient = () => {
-    setFormData({
-      ...formData,
-      ingredients: [...formData.ingredients, ''],
-    });
-  };
-
-  const addInstruction = () => {
-    setFormData({
-      ...formData,
-      instructions: [...formData.instructions, ''],
-    });
-  };
-
-  const removeIngredient = (index: number) => {
-    setFormData({
-      ...formData,
-      ingredients: formData.ingredients.filter((_, i) => i !== index),
-    });
-  };
-
-  const removeInstruction = (index: number) => {
-    setFormData({
-      ...formData,
-      instructions: formData.instructions.filter((_, i) => i !== index),
-    });
-  };
-
   const generateDescription = async () => {
     if (!formData.title || formData.ingredients.length === 0 || formData.instructions.length === 0) {
-      alert('Please fill in the title, ingredients, and instructions first.');
+      alert(RECIPE_FORM.ERRORS.MISSING_FIELDS);
       return;
     }
 
@@ -186,7 +128,7 @@ export default function RecipeForm({ recipe, onCancel, onSuccess }: RecipeFormPr
         })
       });
 
-      if (!response.ok) throw new Error('Failed to generate description');
+      if (!response.ok) throw new Error(RECIPE_FORM.ERRORS.GENERATE_DESCRIPTION_FAILED);
       const { description } = await response.json();
 
       setFormData(prev => ({
@@ -195,7 +137,7 @@ export default function RecipeForm({ recipe, onCancel, onSuccess }: RecipeFormPr
       }));
     } catch (error) {
       console.error('Error generating description:', error);
-      alert('Failed to generate description. Please try again.');
+      alert(RECIPE_FORM.ERRORS.GENERATE_DESCRIPTION_FAILED);
     } finally {
       setIsGeneratingDesc(false);
     }
@@ -203,7 +145,7 @@ export default function RecipeForm({ recipe, onCancel, onSuccess }: RecipeFormPr
 
   const generateTags = async () => {
     if (!formData.title || formData.ingredients.length === 0 || formData.instructions.length === 0) {
-      alert('Please fill in the title, ingredients, and instructions first.');
+      alert(RECIPE_FORM.ERRORS.MISSING_FIELDS);
       return;
     }
 
@@ -221,7 +163,7 @@ export default function RecipeForm({ recipe, onCancel, onSuccess }: RecipeFormPr
         })
       });
 
-      if (!response.ok) throw new Error('Failed to generate tags');
+      if (!response.ok) throw new Error(RECIPE_FORM.ERRORS.GENERATE_TAGS_FAILED);
       const { tags } = await response.json();
 
       setFormData(prev => ({
@@ -230,7 +172,7 @@ export default function RecipeForm({ recipe, onCancel, onSuccess }: RecipeFormPr
       }));
     } catch (error) {
       console.error('Error generating tags:', error);
-      alert('Failed to generate tags. Please try again.');
+      alert(RECIPE_FORM.ERRORS.GENERATE_TAGS_FAILED);
     } finally {
       setIsGeneratingTags(false);
     }
@@ -238,7 +180,7 @@ export default function RecipeForm({ recipe, onCancel, onSuccess }: RecipeFormPr
 
   const generateCompleteRecipe = async () => {
     if (!formData.title) {
-      alert('Please enter a recipe title first.');
+      alert(RECIPE_FORM.ERRORS.MISSING_TITLE);
       return;
     }
 
@@ -254,7 +196,7 @@ export default function RecipeForm({ recipe, onCancel, onSuccess }: RecipeFormPr
         })
       });
 
-      if (!response.ok) throw new Error('Failed to generate recipe');
+      if (!response.ok) throw new Error(RECIPE_FORM.ERRORS.GENERATE_RECIPE_FAILED);
       const { recipe: generatedRecipe } = await response.json();
 
       setFormData(prev => ({
@@ -269,7 +211,7 @@ export default function RecipeForm({ recipe, onCancel, onSuccess }: RecipeFormPr
       }));
     } catch (error) {
       console.error('Error generating complete recipe:', error);
-      alert('Failed to generate recipe. Please try again.');
+      alert(RECIPE_FORM.ERRORS.GENERATE_RECIPE_FAILED);
     } finally {
       setIsGeneratingComplete(false);
     }
@@ -307,7 +249,7 @@ export default function RecipeForm({ recipe, onCancel, onSuccess }: RecipeFormPr
           )}
           <div className="absolute top-4 right-4 flex gap-2">
             <label className="bg-[#819A91] text-white px-4 py-2 rounded-md hover:bg-[#A7C1A8] cursor-pointer transition-colors">
-              Upload Image
+              {RECIPE_FORM.BUTTONS.UPLOAD_IMAGE}
               <input
                 type="file"
                 accept="image/*"
@@ -324,7 +266,7 @@ export default function RecipeForm({ recipe, onCancel, onSuccess }: RecipeFormPr
                 }}
                 className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600 transition-colors"
               >
-                Remove
+                {RECIPE_FORM.BUTTONS.REMOVE_IMAGE}
               </button>
             )}
           </div>
@@ -338,7 +280,7 @@ export default function RecipeForm({ recipe, onCancel, onSuccess }: RecipeFormPr
               value={formData.title}
               onChange={(e) => setFormData({ ...formData, title: e.target.value })}
               className="flex-1 text-3xl font-bold border-0 focus:ring-0 p-0 text-[#819A91] placeholder-[#A7C1A8]"
-              placeholder="Recipe Title"
+              placeholder={RECIPE_FORM.TITLE_PLACEHOLDER}
             />
             {showAIFeatures && (
               <button
@@ -351,14 +293,14 @@ export default function RecipeForm({ recipe, onCancel, onSuccess }: RecipeFormPr
                     : 'bg-[#819A91] text-white hover:bg-[#A7C1A8]'
                 } transition-colors whitespace-nowrap`}
               >
-                {isGeneratingComplete ? 'Generating Recipe...' : 'Generate Complete Recipe'}
+                {isGeneratingComplete ? RECIPE_FORM.BUTTONS.GENERATING_COMPLETE : RECIPE_FORM.BUTTONS.GENERATE_COMPLETE}
               </button>
             )}
           </div>
 
           <div className="mb-6">
             <div className="flex items-center justify-between mb-2">
-              <label className="block text-[#819A91] font-medium">Description</label>
+              <label className="block text-[#819A91] font-medium">{RECIPE_FORM.LABELS.DESCRIPTION}</label>
               {showAIFeatures && (
                 <button
                   type="button"
@@ -370,7 +312,7 @@ export default function RecipeForm({ recipe, onCancel, onSuccess }: RecipeFormPr
                       : 'bg-[#819A91] text-white hover:bg-[#A7C1A8]'
                   } transition-colors`}
                 >
-                  {isGeneratingDesc ? 'Generating...' : 'Generate Description'}
+                  {isGeneratingDesc ? RECIPE_FORM.BUTTONS.GENERATING_DESCRIPTION : RECIPE_FORM.BUTTONS.GENERATE_DESCRIPTION}
                 </button>
               )}
             </div>
@@ -379,7 +321,7 @@ export default function RecipeForm({ recipe, onCancel, onSuccess }: RecipeFormPr
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
               className="w-full rounded-md border-[#D1D8BE] focus:ring-[#819A91] focus:border-[#819A91] text-[#819A91]"
               rows={3}
-              placeholder="Describe your recipe..."
+              placeholder={RECIPE_FORM.DESCRIPTION_PLACEHOLDER}
             />
           </div>
 
@@ -407,7 +349,7 @@ export default function RecipeForm({ recipe, onCancel, onSuccess }: RecipeFormPr
                 onChange={(e) => setFormData({ ...formData, prepTime: parseInt(e.target.value) })}
                 className="w-16 border-0 p-0 bg-transparent"
               />
-              <span className="ml-1">min prep</span>
+              <span className="ml-1">{RECIPE_FORM.LABELS.MIN_PREP}</span>
             </div>
             <div className="flex items-center text-[#819A91]">
               <svg
@@ -432,7 +374,7 @@ export default function RecipeForm({ recipe, onCancel, onSuccess }: RecipeFormPr
                 onChange={(e) => setFormData({ ...formData, cookTime: parseInt(e.target.value) })}
                 className="w-16 border-0 p-0 bg-transparent"
               />
-              <span className="ml-1">min cook</span>
+              <span className="ml-1">{RECIPE_FORM.LABELS.MIN_COOK}</span>
             </div>
             <div className="flex items-center text-[#819A91]">
               <svg
@@ -455,14 +397,14 @@ export default function RecipeForm({ recipe, onCancel, onSuccess }: RecipeFormPr
                 value={formData.cuisineType}
                 onChange={(e) => setFormData({ ...formData, cuisineType: e.target.value })}
                 className="border-0 p-0 bg-transparent"
-                placeholder="Cuisine Type"
+                placeholder={RECIPE_FORM.CUISINE_PLACEHOLDER}
               />
             </div>
           </div>
 
           <div className="grid md:grid-cols-2 gap-8">
             <div>
-              <h2 className="text-xl font-semibold mb-4 text-[#819A91]">Ingredients</h2>
+              <h2 className="text-xl font-semibold mb-4 text-[#819A91]">{RECIPE_FORM.LABELS.INGREDIENTS}</h2>
               <div className="space-y-2">
                 {formData.ingredients.map((ingredient, index) => (
                   <div key={index} className="flex gap-2">
@@ -475,12 +417,15 @@ export default function RecipeForm({ recipe, onCancel, onSuccess }: RecipeFormPr
                         setFormData({ ...formData, ingredients: newIngredients });
                       }}
                       className="w-full border-[#D1D8BE] rounded-md focus:border-[#A7C1A8] focus:ring-[#A7C1A8] text-[#819A91] placeholder-[#A7C1A8]"
-                      placeholder="Add ingredient"
+                      placeholder={RECIPE_FORM.INGREDIENT_PLACEHOLDER}
                       required
                     />
                     <button
                       type="button"
-                      onClick={() => removeIngredient(index)}
+                      onClick={() => {
+                        const newIngredients = formData.ingredients.filter((_, i) => i !== index);
+                        setFormData({ ...formData, ingredients: newIngredients });
+                      }}
                       className="text-red-500 hover:text-red-700"
                     >
                       ×
@@ -489,16 +434,19 @@ export default function RecipeForm({ recipe, onCancel, onSuccess }: RecipeFormPr
                 ))}
                 <button
                   type="button"
-                  onClick={addIngredient}
+                  onClick={() => setFormData({
+                    ...formData,
+                    ingredients: [...formData.ingredients, ''],
+                  })}
                   className="text-[#819A91] hover:text-[#A7C1A8]"
                 >
-                  + Add Ingredient
+                  {RECIPE_FORM.BUTTONS.ADD_INGREDIENT}
                 </button>
               </div>
             </div>
 
             <div>
-              <h2 className="text-xl font-semibold mb-4 text-[#819A91]">Instructions</h2>
+              <h2 className="text-xl font-semibold mb-4 text-[#819A91]">{RECIPE_FORM.LABELS.INSTRUCTIONS}</h2>
               <div className="space-y-2">
                 {formData.instructions.map((instruction, index) => (
                   <div key={index} className="flex gap-2">
@@ -515,7 +463,10 @@ export default function RecipeForm({ recipe, onCancel, onSuccess }: RecipeFormPr
                     />
                     <button
                       type="button"
-                      onClick={() => removeInstruction(index)}
+                      onClick={() => {
+                        const newInstructions = formData.instructions.filter((_, i) => i !== index);
+                        setFormData({ ...formData, instructions: newInstructions });
+                      }}
                       className="text-red-500 hover:text-red-700"
                     >
                       ×
@@ -524,10 +475,13 @@ export default function RecipeForm({ recipe, onCancel, onSuccess }: RecipeFormPr
                 ))}
                 <button
                   type="button"
-                  onClick={addInstruction}
+                  onClick={() => setFormData({
+                    ...formData,
+                    instructions: [...formData.instructions, ''],
+                  })}
                   className="text-[#819A91] hover:text-[#A7C1A8]"
                 >
-                  + Add Instruction
+                  {RECIPE_FORM.BUTTONS.ADD_INSTRUCTION}
                 </button>
               </div>
             </div>
@@ -535,7 +489,7 @@ export default function RecipeForm({ recipe, onCancel, onSuccess }: RecipeFormPr
 
           <div className="mt-12 mb-6">
             <div className="flex items-center justify-between mb-2">
-              <label className="block text-[#819A91] font-medium">Tags <span className="text-sm text-[#A7C1A8]">({formData.tags.length}/3)</span></label>
+              <label className="block text-[#819A91] font-medium">{RECIPE_FORM.LABELS.TAGS} <span className="text-sm text-[#A7C1A8]">({formData.tags.length}/3)</span></label>
               {showAIFeatures && (
                 <button
                   type="button"
@@ -547,7 +501,7 @@ export default function RecipeForm({ recipe, onCancel, onSuccess }: RecipeFormPr
                       : 'bg-[#819A91] text-white hover:bg-[#A7C1A8]'
                   } transition-colors`}
                 >
-                  {isGeneratingTags ? 'Generating...' : 'Generate Tags'}
+                  {isGeneratingTags ? RECIPE_FORM.BUTTONS.GENERATING_TAGS : RECIPE_FORM.BUTTONS.GENERATE_TAGS}
                 </button>
               )}
             </div>
@@ -597,13 +551,13 @@ export default function RecipeForm({ recipe, onCancel, onSuccess }: RecipeFormPr
           </div>
 
           {uploadProgress === 'uploading' && (
-            <div className="mt-4 text-[#819A91]">Uploading image...</div>
+            <div className="mt-4 text-[#819A91]">{RECIPE_FORM.UPLOAD_STATUS.UPLOADING}</div>
           )}
           {uploadProgress === 'done' && (
-            <div className="mt-4 text-green-500">Image uploaded successfully!</div>
+            <div className="mt-4 text-green-500">{RECIPE_FORM.UPLOAD_STATUS.SUCCESS}</div>
           )}
           {uploadProgress === 'error' && (
-            <div className="mt-4 text-red-500">Failed to upload image. Please try again.</div>
+            <div className="mt-4 text-red-500">{RECIPE_FORM.UPLOAD_STATUS.ERROR}</div>
           )}
 
           <div className="mt-8">
@@ -612,7 +566,7 @@ export default function RecipeForm({ recipe, onCancel, onSuccess }: RecipeFormPr
               disabled={isSubmitting || uploadProgress === 'uploading'}
               className="w-full bg-[#819A91] text-white py-3 px-4 rounded-md hover:bg-[#A7C1A8] disabled:bg-[#D1D8BE] font-medium transition-colors"
             >
-              {isSubmitting ? 'Saving Recipe...' : 'Save Recipe'}
+              {isSubmitting ? RECIPE_FORM.BUTTONS.SAVING_RECIPE : RECIPE_FORM.BUTTONS.SAVE_RECIPE}
             </button>
           </div>
         </form>

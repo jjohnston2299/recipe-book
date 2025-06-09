@@ -36,20 +36,28 @@ export function LayoutWrapper({ children, caveatClassName }: LayoutWrapperProps)
           >
             Recipe Book
           </Link>
-          <div className="flex items-center gap-2">
-            <span className="text-sm mr-2">AI Assistant</span>
-            <button
-              onClick={toggleAIFeatures}
-              className={`w-12 h-6 rounded-full p-1 transition-colors ${
-                showAIFeatures ? 'bg-[#D1D8BE]' : 'bg-[#4A5A53]'
-              }`}
-            >
-              <div
-                className={`w-4 h-4 rounded-full bg-white transition-transform ${
-                  showAIFeatures ? 'translate-x-6' : 'translate-x-0'
+          <div className="flex items-center gap-6">
+            <div className="flex items-center gap-2">
+              <span className="text-sm mr-2">AI Assistant</span>
+              <button
+                onClick={toggleAIFeatures}
+                className={`w-12 h-6 rounded-full p-1 transition-colors ${
+                  showAIFeatures ? 'bg-[#D1D8BE]' : 'bg-[#4A5A53]'
                 }`}
-              />
-            </button>
+              >
+                <div
+                  className={`w-4 h-4 rounded-full bg-white transition-transform ${
+                    showAIFeatures ? 'translate-x-6' : 'translate-x-0'
+                  }`}
+                />
+              </button>
+            </div>
+            <Link 
+              href="/recipes/new"
+              className="bg-[#D1D8BE] text-[#819A91] px-4 py-2 rounded hover:bg-white transition-colors font-medium"
+            >
+              Add New Recipe
+            </Link>
           </div>
         </div>
       </nav>

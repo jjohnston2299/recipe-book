@@ -1,31 +1,10 @@
 'use client';
 
 import RecipeForm from './RecipeForm';
-
-interface Recipe {
-  _id: string;
-  title: string;
-  ingredients: string[];
-  instructions: string[];
-  imageUrl: string;
-  prepTime: number;
-  cookTime: number;
-  cuisineType: string;
-  tags: string[];
-}
+import { Recipe } from '@/types/recipe';
 
 interface EditRecipeFormProps {
-  recipe: {
-    _id: string;
-    title: string;
-    ingredients: string[];
-    instructions: string[];
-    imageUrl: string;
-    prepTime: number;
-    cookTime: number;
-    cuisineType: string;
-    tags: string[];
-  };
+  recipe: Recipe;
   onCancel?: () => void;
   onSuccess?: () => void;
 }
