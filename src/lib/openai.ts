@@ -14,7 +14,7 @@ export async function getRecipeRecommendation(prompt: string) {
       messages: [
         {
           role: "system",
-          content: "You are a helpful cooking assistant that provides detailed recipes with ingredients and instructions."
+          content: "You are a Michelin-level recipe consultant. When a user describes what they're craving or their dietary needs, respond with a fully detailed, original recipe that meets their request. Include ingredients and detailed instructions. Recipes should balance creativity with professional reliability. Use professional culinary terminology, avoid vague quantities (e.g., say '2 tsp' not 'a little'), and always consider seasonality, balance, and technique."
         },
         {
           role: "user",
@@ -22,6 +22,8 @@ export async function getRecipeRecommendation(prompt: string) {
         }
       ],
       model: "gpt-3.5-turbo",
+      temperature: 0.8,
+      max_tokens: 650,
     });
 
     return completion.choices[0].message.content;
@@ -37,7 +39,7 @@ export async function getRecipeModification(recipe: string, modification: string
       messages: [
         {
           role: "system",
-          content: "You are a helpful cooking assistant that provides recipe modifications while maintaining the original recipe's essence."
+          content: "You are a culinary expert who specializes in adapting recipes without compromising flavor or technique. Given a recipe and a requested modification, return a new version of the recipe that meets the request while preserving its original essence and professional quality. If needed, make substitutions and explain changes briefly in the instructions. Clearly reflect the requested change, preserve the tone and technique of the original, and use culinary logic to balance substitutions (e.g., umami alternatives for meat)."
         },
         {
           role: "user",
@@ -45,6 +47,8 @@ export async function getRecipeModification(recipe: string, modification: string
         }
       ],
       model: "gpt-3.5-turbo",
+      temperature: 0.6,
+      max_tokens: 600,
     });
 
     return completion.choices[0].message.content;
@@ -61,7 +65,7 @@ export async function generateRecipeDescription(title: string, ingredients: stri
       messages: [
         {
           role: "system",
-          content: "You are a helpful assistant that writes engaging, concise recipe descriptions. Focus on the key flavors, techniques, and what makes the recipe special. Keep descriptions between 2-3 sentences."
+          content: "You are a culinary copywriter crafting engaging, professional recipe descriptions for expert chefs. Based on the recipe title, ingredients, and first few instructions, generate a concise, vivid, and appetizing 2–3 sentence description. Highlight key flavors, techniques, and any special cultural or seasonal relevance. Avoid exaggeration and maintain a refined tone. Emphasize flavor dynamics, texture, and cooking techniques. Avoid generic phrases like 'delicious' or 'tasty'. Reflect the sophistication of a professional kitchen."
         },
         {
           role: "user",
@@ -72,7 +76,7 @@ Key Steps: ${instructions.slice(0, 3).join(', ')}...`
         }
       ],
       temperature: 0.7,
-      max_tokens: 150,
+      max_tokens: 100,
     });
 
     return response.choices[0].message.content;
@@ -89,7 +93,7 @@ export async function suggestRecipeTags(title: string, ingredients: string[], in
       messages: [
         {
           role: "system",
-          content: "You are a helpful assistant that suggests relevant tags for recipes. Focus on cuisine type, cooking method, and dietary restrictions. Return exactly 3 most relevant tags as a comma-separated list."
+          content: "You are an expert culinary categorization assistant. Based on the recipe's title, ingredients, and instructions, generate exactly three unique, relevant tags that describe flavor profiles, cooking methods, or dietary categories. Do not repeat any words already present in the recipe title or the cuisine type. Tags should be concise and descriptive. Prefer culinary terminology used by professionals (e.g., 'Umami', 'Poached', 'Low Carb')."
         },
         {
           role: "user",
@@ -99,8 +103,8 @@ Ingredients: ${ingredients.join(', ')}
 Key Steps: ${instructions.slice(0, 3).join(', ')}...`
         }
       ],
-      temperature: 0.7,
-      max_tokens: 100,
+      temperature: 0.5,
+      max_tokens: 25,
     });
 
     const tags = response.choices[0].message.content?.split(',').map(tag => tag.trim()) || [];
@@ -118,14 +122,15 @@ export async function generateCompleteRecipe(title: string) {
       messages: [
         {
           role: "system",
-          content: "You are a professional chef who creates detailed recipes. For each recipe, provide a description, ingredients list, step-by-step instructions, estimated prep and cook times, cuisine type, and 3 relevant tags. Format the response as JSON with the following structure: { description: string, ingredients: string[], instructions: string[], prepTime: number, cookTime: number, cuisineType: string, tags: string[] }"
+          content: "You are a professional chef and recipe developer. Given only the recipe title, generate a complete, realistic, high-quality recipe as JSON. Ensure all components are present: description, ingredients (as a list of strings), step-by-step instructions (clear and concise), preparation and cook time in minutes, cuisine type, and three relevant tags. Keep it chef-level but accessible for other professionals. Prioritize clarity, realism, and efficiency. Assume a professional kitchen context with appropriate shorthand. Instructions should be step-based (1 idea per step)."
         },
         {
           role: "user",
           content: `Create a complete recipe for: ${title}`
         }
       ],
-      temperature: 0.7,
+      temperature: 0.6,
+      max_tokens: 700,
       response_format: { type: "json_object" },
     });
 
