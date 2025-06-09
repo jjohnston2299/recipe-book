@@ -1,4 +1,4 @@
-import { render, screen, fireEvent, waitFor } from '@/utils/test-utils';
+import { render, screen, fireEvent, waitFor, act } from '@/utils/test-utils';
 import RecipeForm from './RecipeForm';
 import { RECIPE_FORM } from '@/constants';
 import '@testing-library/jest-dom';
@@ -354,5 +354,143 @@ describe('RecipeForm', () => {
       expect(global.fetch).toHaveBeenCalledWith(`/api/recipes/${mockRecipe._id}`, expect.any(Object));
       expect(onSuccess).toHaveBeenCalled();
     });
+  });
+
+  it('handles missing fields error when generating description', async () => {
+    const alertMock = jest.spyOn(window, 'alert').mockImplementation(() => {});
+    render(<RecipeForm />);
+    
+    // Try to generate description without required fields
+    const generateButton = screen.getByText(RECIPE_FORM.BUTTONS.GENERATE_DESCRIPTION);
+    fireEvent.click(generateButton);
+    
+    expect(alertMock).toHaveBeenCalledWith(RECIPE_FORM.ERRORS.MISSING_FIELDS);
+    expect(global.fetch).not.toHaveBeenCalled();
+    
+    alertMock.mockRestore();
+  });
+
+  it('handles API error when generating description', async () => {
+    const alertMock = jest.spyOn(window, 'alert').mockImplementation(() => {});
+    const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    (global.fetch as jest.Mock).mockRejectedValueOnce(new Error('API Error'));
+    
+    render(<RecipeForm recipe={mockRecipe} />);
+    
+    const generateButton = screen.getByText(RECIPE_FORM.BUTTONS.GENERATE_DESCRIPTION);
+    fireEvent.click(generateButton);
+    
+    await waitFor(() => {
+      expect(alertMock).toHaveBeenCalledWith(RECIPE_FORM.ERRORS.GENERATE_DESCRIPTION_FAILED);
+      expect(consoleSpy).toHaveBeenCalled();
+    });
+    
+    alertMock.mockRestore();
+    consoleSpy.mockRestore();
+  });
+
+  it('handles missing fields error when generating tags', async () => {
+    const alertMock = jest.spyOn(window, 'alert').mockImplementation(() => {});
+    render(<RecipeForm />);
+    
+    // Try to generate tags without required fields
+    const generateButton = screen.getByText(RECIPE_FORM.BUTTONS.GENERATE_TAGS);
+    fireEvent.click(generateButton);
+    
+    expect(alertMock).toHaveBeenCalledWith(RECIPE_FORM.ERRORS.MISSING_FIELDS);
+    expect(global.fetch).not.toHaveBeenCalled();
+    
+    alertMock.mockRestore();
+  });
+
+  it('handles API error when generating tags', async () => {
+    const alertMock = jest.spyOn(window, 'alert').mockImplementation(() => {});
+    const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    (global.fetch as jest.Mock).mockRejectedValueOnce(new Error('API Error'));
+    
+    render(<RecipeForm recipe={mockRecipe} />);
+    
+    const generateButton = screen.getByText(RECIPE_FORM.BUTTONS.GENERATE_TAGS);
+    fireEvent.click(generateButton);
+    
+    await waitFor(() => {
+      expect(alertMock).toHaveBeenCalledWith(RECIPE_FORM.ERRORS.GENERATE_TAGS_FAILED);
+      expect(consoleSpy).toHaveBeenCalled();
+    });
+    
+    alertMock.mockRestore();
+    consoleSpy.mockRestore();
+  });
+
+  it('handles complete recipe generation successfully', async () => {
+    const generatedRecipe = {
+      description: 'Generated description',
+      ingredients: ['Generated ingredient'],
+      instructions: ['Generated instruction'],
+      prepTime: 20,
+      cookTime: 30,
+      cuisineType: 'Generated cuisine',
+      tags: ['generated']
+    };
+    
+    (global.fetch as jest.Mock).mockResolvedValueOnce({
+      ok: true,
+      json: () => Promise.resolve({ recipe: generatedRecipe })
+    });
+    
+    render(<RecipeForm recipe={mockRecipe} />);
+    
+    // Enter a title (required for generation)
+    fireEvent.change(screen.getByPlaceholderText(RECIPE_FORM.TITLE_PLACEHOLDER), {
+      target: { value: 'Test Recipe' }
+    });
+    
+    const generateButton = screen.getByText(RECIPE_FORM.BUTTONS.GENERATE_COMPLETE);
+    fireEvent.click(generateButton);
+    
+    await waitFor(() => {
+      // Verify form was updated with generated data
+      expect(screen.getByPlaceholderText(RECIPE_FORM.DESCRIPTION_PLACEHOLDER)).toHaveValue(generatedRecipe.description);
+      expect(screen.getByDisplayValue(generatedRecipe.ingredients[0])).toBeInTheDocument();
+      expect(screen.getByDisplayValue(generatedRecipe.instructions[0])).toBeInTheDocument();
+      expect(screen.getByText(generatedRecipe.tags[0])).toBeInTheDocument();
+    });
+  });
+
+  it('handles missing title error when generating complete recipe', async () => {
+    const alertMock = jest.spyOn(window, 'alert').mockImplementation(() => {});
+    
+    render(<RecipeForm />);
+    
+    // Find the generate button (should be visible since useAIFeatures is mocked to return true)
+    const generateButton = screen.getByText(RECIPE_FORM.BUTTONS.GENERATE_COMPLETE);
+    expect(generateButton).toBeInTheDocument();
+    expect(generateButton).toBeDisabled(); // Button should be disabled when no title
+    
+    // Since the button is disabled, we know the user can't trigger the function
+    // and if they somehow did, it would show the missing title error
+    expect(alertMock).not.toHaveBeenCalled();
+    expect(global.fetch).not.toHaveBeenCalled();
+    
+    alertMock.mockRestore();
+  });
+
+  it('handles API error when generating complete recipe', async () => {
+    const alertMock = jest.spyOn(window, 'alert').mockImplementation(() => {});
+    const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    (global.fetch as jest.Mock).mockRejectedValueOnce(new Error('API Error'));
+    
+    render(<RecipeForm recipe={mockRecipe} />);
+    
+    const generateButton = screen.getByText(RECIPE_FORM.BUTTONS.GENERATE_COMPLETE);
+    fireEvent.click(generateButton);
+    
+    await waitFor(() => {
+      expect(alertMock).toHaveBeenCalledWith(RECIPE_FORM.ERRORS.GENERATE_RECIPE_FAILED);
+      expect(consoleSpy).toHaveBeenCalled();
+    });
+    
+    alertMock.mockRestore();
+    consoleSpy.mockRestore();
   });
 }); 

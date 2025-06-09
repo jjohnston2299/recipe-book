@@ -46,7 +46,6 @@ describe('RecipeFilters', () => {
 
   it('displays all available cuisine types', () => {
     render(<RecipeFilters {...mockProps} />);
-    const cuisineSelect = screen.getByLabelText(RECIPE_FILTERS.LABELS.CUISINE);
     
     mockProps.cuisineTypes.forEach(cuisine => {
       expect(screen.getByText(cuisine)).toBeInTheDocument();

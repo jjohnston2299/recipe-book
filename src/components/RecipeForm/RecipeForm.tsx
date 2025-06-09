@@ -6,9 +6,9 @@ import { useAIFeatures } from '@/context/AIFeaturesContext';
 import { Recipe, RecipeFormProps } from '@/types/recipe';
 import { RECIPE_FORM } from '@/constants';
 
-interface FormData extends Omit<Recipe, '_id'> {}
+type FormData = Omit<Recipe, '_id'>;
 
-export default function RecipeForm({ recipe, onCancel, onSuccess }: RecipeFormProps) {
+export default function RecipeForm({ recipe, onSuccess }: RecipeFormProps) {
   const showAIFeatures = useAIFeatures();
   const [formData, setFormData] = useState<FormData>(
     recipe || {

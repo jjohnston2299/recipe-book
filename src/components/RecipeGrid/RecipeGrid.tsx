@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { formatTime } from '@/components/RecipeFilters/RecipeFilters';
-import { Recipe, RecipeGridProps } from '@/types/recipe';
+import { RecipeGridProps } from '@/types/recipe';
 import { RECIPE_GRID } from '@/constants';
 
 export default function RecipeGrid({ recipes }: RecipeGridProps) {

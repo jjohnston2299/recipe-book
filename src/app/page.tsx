@@ -1,6 +1,5 @@
 'use client';
 
-import Link from 'next/link';
 import RecipeFilters from '@/components/RecipeFilters/RecipeFilters';
 import RecipeGrid from '@/components/RecipeGrid/RecipeGrid';
 import { useRecipes } from '@/hooks/useRecipes';

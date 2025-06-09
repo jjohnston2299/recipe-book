@@ -7,8 +7,8 @@ interface CloudflareResponse {
     variants: string[];
   };
   success: boolean;
-  errors: any[];
-  messages: any[];
+  errors: { code: number; message: string }[];
+  messages: { code: number; message: string }[];
 }
 
 export async function uploadImage(file: File): Promise<string> {

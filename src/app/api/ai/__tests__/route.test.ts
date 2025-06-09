@@ -1,11 +1,10 @@
-import { NextResponse } from 'next/server';
 import { POST } from '../route';
 import { generateRecipeDescription, suggestRecipeTags, generateCompleteRecipe } from '@/lib/openai';
 
 // Mock NextResponse
 jest.mock('next/server', () => ({
   NextResponse: {
-    json: (data: any, init?: ResponseInit) => {
+    json: (data: Record<string, unknown>, init?: ResponseInit) => {
       const response = new Response(JSON.stringify(data), init);
       Object.defineProperty(response, 'status', {
         get() {
