@@ -2,11 +2,6 @@ import { NextResponse } from 'next/server';
 import { getDb } from '@/lib/mongodb';
 import { ObjectId } from 'mongodb';
 
-type RouteParams = {
-  params: { id: string };
-  searchParams: { [key: string]: string | string[] | undefined };
-};
-
 // Helper function to delete image from Cloudflare
 async function deleteCloudflareImage(imageUrl: string) {
   try {
