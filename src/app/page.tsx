@@ -1,8 +1,8 @@
 'use client';
 
 import Link from 'next/link';
-import RecipeFilters from '@/components/RecipeFilters';
-import RecipeGrid from '@/components/RecipeGrid';
+import RecipeFilters from '@/components/RecipeFilters/RecipeFilters';
+import RecipeGrid from '@/components/RecipeGrid/RecipeGrid';
 import { useRecipes } from '@/hooks/useRecipes';
 
 export default function Home() {

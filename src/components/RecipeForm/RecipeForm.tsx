@@ -272,7 +272,11 @@ export default function RecipeForm({ recipe, onCancel, onSuccess }: RecipeFormPr
           </div>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-6">
+        <form 
+          className="p-6"
+          role="form"
+          onSubmit={handleSubmit}
+        >
           <div className="flex items-center justify-between mb-4">
             <input
               type="text"

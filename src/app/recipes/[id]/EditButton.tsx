@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import EditRecipeForm from '@/components/EditRecipeForm';
+import EditRecipeForm from '@/components/EditRecipeForm/EditRecipeForm';
 import { Recipe } from '@/types/recipe';
 import { EDIT_RECIPE } from '@/constants';
 
