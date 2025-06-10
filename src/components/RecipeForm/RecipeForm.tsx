@@ -218,7 +218,7 @@ export default function RecipeForm({ recipe, onSuccess }: RecipeFormProps) {
   };
 
   return (
-    <div className="max-w-4xl mx-auto py-8 px-4">
+    <div className="max-w-4xl mx-auto py-8 sm:px-4">
       <div className="bg-white rounded-lg shadow-lg overflow-hidden">
         <div className="relative aspect-video">
           {imagePreview ? (

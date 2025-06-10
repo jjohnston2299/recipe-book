@@ -38,7 +38,10 @@ export function LayoutWrapper({ children, caveatClassName }: LayoutWrapperProps)
           </Link>
           <div className="flex items-center gap-6">
             <div className="flex items-center gap-2">
-              <span className="text-sm mr-2">AI Assistant</span>
+              <span className="text-sm mr-2">
+                <span className="sm:hidden">AI</span>
+                <span className="hidden sm:inline">AI Assistant</span>
+              </span>
               <button
                 onClick={toggleAIFeatures}
                 className={`w-12 h-6 rounded-full p-1 transition-colors ${
@@ -56,7 +59,7 @@ export function LayoutWrapper({ children, caveatClassName }: LayoutWrapperProps)
               href="/recipes/new"
               className="bg-[#D1D8BE] text-[#819A91] px-4 py-2 rounded hover:bg-white transition-colors font-medium"
             >
-              Add New Recipe
+              New Recipe +
             </Link>
           </div>
         </div>
