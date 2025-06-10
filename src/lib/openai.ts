@@ -8,56 +8,6 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
-export async function getRecipeRecommendation(prompt: string) {
-  try {
-    const completion = await openai.chat.completions.create({
-      messages: [
-        {
-          role: "system",
-          content: "You are a Michelin-level recipe consultant. When a user describes what they're craving or their dietary needs, respond with a fully detailed, original recipe that meets their request. Include ingredients and detailed instructions. Recipes should balance creativity with professional reliability. Use professional culinary terminology, avoid vague quantities (e.g., say '2 tsp' not 'a little'), and always consider seasonality, balance, and technique."
-        },
-        {
-          role: "user",
-          content: prompt
-        }
-      ],
-      model: "gpt-3.5-turbo",
-      temperature: 0.8,
-      max_tokens: 650,
-    });
-
-    return completion.choices[0].message.content;
-  } catch (error) {
-    console.error('Error getting recipe recommendation:', error);
-    throw error;
-  }
-}
-
-export async function getRecipeModification(recipe: string, modification: string) {
-  try {
-    const completion = await openai.chat.completions.create({
-      messages: [
-        {
-          role: "system",
-          content: "You are a culinary expert who specializes in adapting recipes without compromising flavor or technique. Given a recipe and a requested modification, return a new version of the recipe that meets the request while preserving its original essence and professional quality. If needed, make substitutions and explain changes briefly in the instructions. Clearly reflect the requested change, preserve the tone and technique of the original, and use culinary logic to balance substitutions (e.g., umami alternatives for meat)."
-        },
-        {
-          role: "user",
-          content: `Original recipe: ${recipe}\nRequested modification: ${modification}`
-        }
-      ],
-      model: "gpt-3.5-turbo",
-      temperature: 0.6,
-      max_tokens: 600,
-    });
-
-    return completion.choices[0].message.content;
-  } catch (error) {
-    console.error('Error modifying recipe:', error);
-    throw error;
-  }
-}
-
 export async function generateRecipeDescription(title: string, ingredients: string[], instructions: string[]) {
   try {
     const response = await openai.chat.completions.create({
