@@ -87,8 +87,12 @@ export async function generateCompleteRecipe(title: string) {
     const recipeData = JSON.parse(response.choices[0].message.content || '{}');
     
     // Ensure instructions are properly formatted as strings
-    const formattedInstructions = recipeData.instructions?.map((instruction: any) => 
-      typeof instruction === 'object' ? instruction.text || String(instruction) : String(instruction)
+    const formattedInstructions = recipeData.instructions?.map((instruction: string | { text?: string } | unknown) => 
+      typeof instruction === 'object' && instruction !== null
+        ? 'text' in instruction 
+          ? instruction.text || String(instruction)
+          : String(instruction)
+        : String(instruction)
     ) || [];
 
     // Ensure cuisine type is a string
