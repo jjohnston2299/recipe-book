@@ -321,7 +321,7 @@ export default function RecipeForm({ recipe }: RecipeFormProps) {
                 className={`whitespace-nowrap text-sm px-4 py-2 rounded ${
                   isGeneratingComplete || !formData.title
                     ? 'bg-[#D1D8BE] cursor-not-allowed'
-                    : 'bg-[#819A91] text-white hover:bg-[#A7C1A8]'
+                    : 'bg-[#819A91] text-white hover:bg-[#A7C1A8] cursor-pointer'
                 } transition-colors`}
               >
                 {isGeneratingComplete ? RECIPE_FORM.BUTTONS.GENERATING_COMPLETE : RECIPE_FORM.BUTTONS.GENERATE_COMPLETE}
@@ -347,7 +347,7 @@ export default function RecipeForm({ recipe }: RecipeFormProps) {
                   className={`absolute top-2 right-2 p-2 rounded flex items-center justify-center ${
                     isGeneratingDesc
                       ? 'bg-[#D1D8BE] cursor-not-allowed'
-                      : 'bg-[#819A91] text-white hover:bg-[#A7C1A8]'
+                      : 'bg-[#819A91] text-white hover:bg-[#A7C1A8] cursor-pointer'
                   } transition-colors`}
                   title={isGeneratingDesc ? RECIPE_FORM.BUTTONS.GENERATING_DESCRIPTION : RECIPE_FORM.BUTTONS.GENERATE_DESCRIPTION}
                 >
@@ -530,7 +530,7 @@ export default function RecipeForm({ recipe }: RecipeFormProps) {
                         const newIngredients = formData.ingredients.filter((_, i) => i !== index);
                         setFormData({ ...formData, ingredients: newIngredients });
                       }}
-                      className="text-[#A7C1A8] hover:text-[#819A91]"
+                      className="text-[#A7C1A8] hover:text-[#819A91] cursor-pointer"
                     >
                       ×
                     </button>
@@ -542,7 +542,7 @@ export default function RecipeForm({ recipe }: RecipeFormProps) {
                     ...formData,
                     ingredients: [...formData.ingredients, ''],
                   })}
-                  className="text-[#819A91] hover:text-[#A7C1A8]"
+                  className="text-[#819A91] hover:text-[#A7C1A8] cursor-pointer"
                 >
                   {RECIPE_FORM.BUTTONS.ADD_INGREDIENT}
                 </button>
@@ -571,7 +571,7 @@ export default function RecipeForm({ recipe }: RecipeFormProps) {
                         const newInstructions = formData.instructions.filter((_, i) => i !== index);
                         setFormData({ ...formData, instructions: newInstructions });
                       }}
-                      className="text-[#A7C1A8] hover:text-[#819A91]"
+                      className="text-[#A7C1A8] hover:text-[#819A91] cursor-pointer"
                     >
                       ×
                     </button>
@@ -583,7 +583,7 @@ export default function RecipeForm({ recipe }: RecipeFormProps) {
                     ...formData,
                     instructions: [...formData.instructions, ''],
                   })}
-                  className="text-[#819A91] hover:text-[#A7C1A8]"
+                  className="text-[#819A91] hover:text-[#A7C1A8] cursor-pointer"
                 >
                   {RECIPE_FORM.BUTTONS.ADD_INSTRUCTION}
                 </button>
@@ -602,7 +602,7 @@ export default function RecipeForm({ recipe }: RecipeFormProps) {
                   className={`p-2 rounded flex items-center justify-center ${
                     isGeneratingTags
                       ? 'bg-[#D1D8BE] cursor-not-allowed'
-                      : 'bg-[#819A91] text-white hover:bg-[#A7C1A8]'
+                      : 'bg-[#819A91] text-white hover:bg-[#A7C1A8] cursor-pointer'
                   } transition-colors`}
                   title={isGeneratingTags ? RECIPE_FORM.BUTTONS.GENERATING_TAGS : RECIPE_FORM.BUTTONS.GENERATE_TAGS}
                 >
@@ -639,7 +639,7 @@ export default function RecipeForm({ recipe }: RecipeFormProps) {
                       ...prev,
                       tags: prev.tags.filter((_, i) => i !== index)
                     }))}
-                    className="text-[#A7C1A8] hover:text-[#819A91]"
+                    className="text-[#A7C1A8] hover:text-[#819A91] cursor-pointer"
                   >
                     ×
                   </button>
@@ -685,7 +685,7 @@ export default function RecipeForm({ recipe }: RecipeFormProps) {
             <button
               type="submit"
               disabled={isSubmitting || uploadProgress === 'uploading'}
-              className="w-full bg-[#819A91] text-white py-3 px-4 rounded-md hover:bg-[#A7C1A8] disabled:bg-[#D1D8BE] font-medium transition-colors"
+              className="w-full bg-[#819A91] text-white py-3 px-4 rounded-md hover:bg-[#A7C1A8] disabled:bg-[#D1D8BE] font-medium transition-colors cursor-pointer disabled:cursor-not-allowed"
             >
               {isSubmitting ? RECIPE_FORM.BUTTONS.SAVING_RECIPE : RECIPE_FORM.BUTTONS.SAVE_RECIPE}
             </button>

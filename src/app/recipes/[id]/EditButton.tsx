@@ -10,7 +10,7 @@ export default function EditButton({ recipe }: { recipe: Recipe }) {
   return (
     <button
       onClick={() => router.push(`/recipes/${recipe._id}/edit`)}
-      className="bg-[#819A91] text-white px-4 py-2 rounded-md hover:bg-[#A7C1A8] flex items-center transition-colors"
+      className="bg-[#819A91] text-white px-4 py-2 rounded-md hover:bg-[#A7C1A8] flex items-center transition-colors cursor-pointer"
     >
       <svg
         xmlns="http://www.w3.org/2000/svg"

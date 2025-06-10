@@ -39,7 +39,7 @@ export default function DeleteButton({ recipeId }: { recipeId: string }) {
           <div className="flex justify-end gap-4">
             <button
               onClick={() => setShowConfirmation(false)}
-              className="px-4 py-2 text-gray-700 hover:text-gray-900"
+              className="px-4 py-2 text-gray-700 hover:text-gray-900 cursor-pointer"
               disabled={isDeleting}
             >
               Cancel
@@ -47,7 +47,7 @@ export default function DeleteButton({ recipeId }: { recipeId: string }) {
             <button
               onClick={handleDelete}
               disabled={isDeleting}
-              className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600 disabled:bg-red-300"
+              className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600 disabled:bg-red-300 cursor-pointer disabled:cursor-not-allowed"
             >
               {isDeleting ? 'Deleting...' : 'Delete'}
             </button>
@@ -60,7 +60,7 @@ export default function DeleteButton({ recipeId }: { recipeId: string }) {
   return (
     <button
       onClick={() => setShowConfirmation(true)}
-      className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600 flex items-center transition-colors"
+      className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600 flex items-center transition-colors cursor-pointer"
     >
       <svg
         xmlns="http://www.w3.org/2000/svg"
