@@ -78,7 +78,7 @@ export default async function RecipePage({ params }: { params: Promise<{ id: str
   const totalTime = recipe.prepTime + recipe.cookTime;
 
   return (
-    <div className="max-w-4xl mx-auto py-8 px-4">
+    <div className="max-w-4xl mx-auto sm:py-4 sm:px-4">
       <div className="flex justify-between items-center mb-6">
         <Link
           href="/"
@@ -86,7 +86,7 @@ export default async function RecipePage({ params }: { params: Promise<{ id: str
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
-            className="h-5 w-5 mr-1"
+            className="h-7 w-7 sm:h-5 sm:w-5 sm:mr-1"
             viewBox="0 0 20 20"
             fill="currentColor"
           >
@@ -96,7 +96,7 @@ export default async function RecipePage({ params }: { params: Promise<{ id: str
               clipRule="evenodd"
             />
           </svg>
-          Back to Recipes
+          <span className="hidden sm:inline">Back to Recipes</span>
         </Link>
         <div className="flex gap-4">
           <EditButton recipe={recipe} />

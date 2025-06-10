@@ -64,7 +64,7 @@ export default function DeleteButton({ recipeId }: { recipeId: string }) {
     >
       <svg
         xmlns="http://www.w3.org/2000/svg"
-        className="h-5 w-5 mr-1"
+        className="h-6 w-6 sm:h-5 sm:w-5 sm:mr-1"
         viewBox="0 0 20 20"
         fill="currentColor"
       >
@@ -74,7 +74,7 @@ export default function DeleteButton({ recipeId }: { recipeId: string }) {
           clipRule="evenodd"
         />
       </svg>
-      Delete Recipe
+      <span className="hidden sm:inline">Delete Recipe</span>
     </button>
   );
 } 
