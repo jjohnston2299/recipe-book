@@ -2,7 +2,7 @@
 
 import Image from 'next/image';
 import { useAIFeatures } from '@/context/AIFeaturesContext';
-import { Recipe, RecipeFormProps } from '@/types/recipe';
+import { RecipeFormProps } from '@/types/recipe';
 import { RECIPE_FORM } from '@/constants';
 import Link from 'next/link';
 import Form from './Form';
@@ -16,7 +16,6 @@ export default function RecipeForm({ recipe, onSuccess }: RecipeFormProps) {
     setFormData,
     imagePreview,
     setImagePreview,
-    uploadProgress,
     handleImageUpload,
     isSubmitting,
     handleSubmit,
@@ -30,6 +29,27 @@ export default function RecipeForm({ recipe, onSuccess }: RecipeFormProps) {
     generateTags,
     generateCompleteRecipe,
   } = useRecipeAI(formData, setFormData);
+
+  if (!showAIFeatures) {
+    return (
+      <div className="max-w-4xl mx-auto">
+        <div className="bg-white rounded-lg shadow-lg overflow-hidden border border-[#D1D8BE]">
+          <Form
+            formData={formData}
+            setFormData={setFormData}
+            handleSubmit={handleSubmit}
+            isSubmitting={isSubmitting}
+            isGeneratingDesc={false}
+            isGeneratingTags={false}
+            isGeneratingComplete={false}
+            generateDescription={async () => Promise.resolve()}
+            generateTags={async () => Promise.resolve()}
+            generateCompleteRecipe={async () => Promise.resolve()}
+          />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-4xl mx-auto">
@@ -111,10 +131,6 @@ export default function RecipeForm({ recipe, onSuccess }: RecipeFormProps) {
           formData={formData}
           setFormData={setFormData}
           handleSubmit={handleSubmit}
-          imagePreview={imagePreview}
-          setImagePreview={setImagePreview}
-          uploadProgress={uploadProgress}
-          handleImageUpload={handleImageUpload}
           isSubmitting={isSubmitting}
           isGeneratingDesc={isGeneratingDesc}
           isGeneratingTags={isGeneratingTags}

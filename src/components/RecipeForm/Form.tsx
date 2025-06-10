@@ -9,10 +9,6 @@ type FormProps = {
   formData: Omit<Recipe, '_id'>;
   setFormData: React.Dispatch<React.SetStateAction<Omit<Recipe, '_id'>>>;
   handleSubmit: (e: FormEvent) => Promise<void>;
-  imagePreview: string | null;
-  setImagePreview: (url: string | null) => void;
-  uploadProgress: 'idle' | 'uploading' | 'done' | 'error';
-  handleImageUpload: (e: React.ChangeEvent<HTMLInputElement>) => Promise<void>;
   isSubmitting: boolean;
   isGeneratingDesc: boolean;
   isGeneratingTags: boolean;
@@ -26,10 +22,6 @@ export default function Form({
   formData,
   setFormData,
   handleSubmit,
-  imagePreview,
-  setImagePreview,
-  uploadProgress,
-  handleImageUpload,
   isSubmitting,
   isGeneratingDesc,
   isGeneratingTags,
@@ -413,21 +405,11 @@ export default function Form({
         )}
       </div>
 
-      {uploadProgress === 'uploading' && (
-        <div className="mt-4 text-[#819A91]">{RECIPE_FORM.UPLOAD_STATUS.UPLOADING}</div>
-      )}
-      {uploadProgress === 'done' && (
-        <div className="mt-4 text-green-500">{RECIPE_FORM.UPLOAD_STATUS.SUCCESS}</div>
-      )}
-      {uploadProgress === 'error' && (
-        <div className="mt-4 text-red-500">{RECIPE_FORM.UPLOAD_STATUS.ERROR}</div>
-      )}
-
       <div className="mt-8">
         <button
           type="submit"
-          disabled={isSubmitting || uploadProgress === 'uploading'}
-          className="w-full bg-[#819A91] text-white py-3 px-4 rounded-md hover:bg-[#A7C1A8] disabled:bg-[#D1D8BE] font-medium transition-colors cursor-pointer disabled:cursor-not-allowed"
+          disabled={isSubmitting}
+          className="w-full bg-[#819A91] text-white py-3 px-4 rounded-md hover:bg-[#A7C1A8] font-medium transition-colors cursor-pointer"
         >
           {isSubmitting ? RECIPE_FORM.BUTTONS.SAVING_RECIPE : RECIPE_FORM.BUTTONS.SAVE_RECIPE}
         </button>
