@@ -44,7 +44,7 @@ export default async function EditRecipePage({ params }: { params: Promise<{ id:
   }
 
   return (
-    <div className="max-w-4xl mx-auto sm:px-4 py-4">
+    <div className="max-w-4xl mx-auto sm:px-4 sm:py-4">
       <RecipeForm recipe={recipe} />
     </div>
   );

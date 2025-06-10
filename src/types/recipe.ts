@@ -15,6 +15,7 @@ export interface Recipe {
 
 export interface RecipeFormProps {
   recipe?: Recipe;
+  onSuccess?: () => void;
 }
 
 export interface RecipeGridProps {

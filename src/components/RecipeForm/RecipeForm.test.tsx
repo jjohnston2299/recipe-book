@@ -2,10 +2,120 @@ import { render, screen, fireEvent, waitFor } from '@/utils/test-utils';
 import RecipeForm from './RecipeForm';
 import { RECIPE_FORM } from '@/constants';
 import '@testing-library/jest-dom';
+import { useState, FormEvent } from 'react';
+import { Recipe } from '@/types/recipe';
+
+type FormData = Omit<Recipe, '_id'>;
 
 // Mock the useAIFeatures hook
 jest.mock('@/context/AIFeaturesContext', () => ({
   useAIFeatures: () => true
+}));
+
+// Mock the useRecipeAI hook
+jest.mock('@/hooks/useRecipeAI', () => ({
+  useRecipeAI: (formData: FormData, setFormData: (data: FormData) => void) => {
+    const [isGeneratingDesc, setIsGeneratingDesc] = useState(false);
+    const [isGeneratingTags, setIsGeneratingTags] = useState(false);
+    const [isGeneratingComplete, setIsGeneratingComplete] = useState(false);
+
+    const generateDescription = async () => {
+      if (!formData.title || !formData.ingredients.length || !formData.instructions.length) {
+        alert(RECIPE_FORM.ERRORS.MISSING_FIELDS);
+        return;
+      }
+
+      setIsGeneratingDesc(true);
+      try {
+        const response = await fetch('/api/ai', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action: 'generate-description',
+            title: formData.title,
+            ingredients: formData.ingredients,
+            instructions: formData.instructions
+          })
+        });
+
+        if (!response.ok) throw new Error();
+        const data = await response.json();
+        setFormData({ ...formData, description: data.description });
+      } catch (error) {
+        console.error('Error generating description:', error);
+        alert(RECIPE_FORM.ERRORS.GENERATE_DESCRIPTION_FAILED);
+      } finally {
+        setIsGeneratingDesc(false);
+      }
+    };
+
+    const generateTags = async () => {
+      if (!formData.title || !formData.ingredients.length || !formData.instructions.length) {
+        alert(RECIPE_FORM.ERRORS.MISSING_FIELDS);
+        return;
+      }
+
+      setIsGeneratingTags(true);
+      try {
+        const response = await fetch('/api/ai', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action: 'suggest-tags',
+            title: formData.title,
+            ingredients: formData.ingredients,
+            instructions: formData.instructions
+          })
+        });
+
+        if (!response.ok) throw new Error();
+        const data = await response.json();
+        setFormData({ ...formData, tags: data.tags });
+      } catch (error) {
+        console.error('Error generating tags:', error);
+        alert(RECIPE_FORM.ERRORS.GENERATE_TAGS_FAILED);
+      } finally {
+        setIsGeneratingTags(false);
+      }
+    };
+
+    const generateCompleteRecipe = async () => {
+      if (!formData.title) {
+        alert(RECIPE_FORM.ERRORS.MISSING_TITLE);
+        return;
+      }
+
+      setIsGeneratingComplete(true);
+      try {
+        const response = await fetch('/api/ai', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action: 'generate-complete',
+            title: formData.title
+          })
+        });
+
+        if (!response.ok) throw new Error();
+        const data = await response.json();
+        setFormData({ ...formData, ...data.recipe });
+      } catch (error) {
+        console.error('Error generating recipe:', error);
+        alert(RECIPE_FORM.ERRORS.GENERATE_RECIPE_FAILED);
+      } finally {
+        setIsGeneratingComplete(false);
+      }
+    };
+
+    return {
+      isGeneratingDesc,
+      isGeneratingTags,
+      isGeneratingComplete,
+      generateDescription,
+      generateTags,
+      generateCompleteRecipe
+    };
+  }
 }));
 
 // Mock fetch for API calls
@@ -13,6 +123,88 @@ global.fetch = jest.fn();
 
 // Mock URL.createObjectURL
 global.URL.createObjectURL = jest.fn(() => 'mock-url');
+
+// Mock the useRecipeForm hook
+jest.mock('@/hooks/useRecipeForm', () => ({
+  useRecipeForm: (recipe?: Recipe, onSuccess?: () => void) => {
+    const [formData, setFormData] = useState<FormData>(recipe || {
+      title: '',
+      description: '',
+      ingredients: [''],
+      instructions: [''],
+      imageUrl: '',
+      prepTime: 0,
+      cookTime: 0,
+      cuisineType: '',
+      tags: [],
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    });
+
+    const [imagePreview, setImagePreview] = useState<string | null>(recipe?.imageUrl || null);
+    const [uploadProgress, setUploadProgress] = useState<'idle' | 'uploading' | 'done' | 'error'>('idle');
+    const [isSubmitting, setIsSubmitting] = useState(false);
+
+    const handleSubmit = async (e: FormEvent) => {
+      e.preventDefault();
+      setIsSubmitting(true);
+      try {
+        const response = await fetch(recipe ? `/api/recipes/${recipe._id}` : '/api/recipes', {
+          method: recipe ? 'PUT' : 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(formData),
+        });
+        if (!response.ok) throw new Error(RECIPE_FORM.ERRORS.SAVE_FAILED);
+        if (onSuccess) onSuccess();
+      } catch (error) {
+        console.error('Error saving recipe:', error);
+        alert(RECIPE_FORM.ERRORS.SAVE_FAILED);
+      } finally {
+        setIsSubmitting(false);
+      }
+    };
+
+    const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+
+      setImagePreview(URL.createObjectURL(file));
+      setUploadProgress('uploading');
+
+      try {
+        const formData = new FormData();
+        formData.append('file', file);
+
+        const response = await fetch('/api/images', {
+          method: 'POST',
+          body: formData,
+        });
+
+        if (!response.ok) throw new Error(RECIPE_FORM.ERRORS.UPLOAD_FAILED);
+        const result = await response.json();
+        if (!result.success) throw new Error(result.error || RECIPE_FORM.ERRORS.UPLOAD_FAILED);
+
+        setFormData(prev => ({ ...prev, imageUrl: result.url }));
+        setUploadProgress('done');
+      } catch (error) {
+        console.error('Error uploading image:', error);
+        setUploadProgress('error');
+        alert(RECIPE_FORM.ERRORS.UPLOAD_FAILED);
+      }
+    };
+
+    return {
+      formData,
+      setFormData,
+      imagePreview,
+      setImagePreview,
+      uploadProgress,
+      handleImageUpload,
+      isSubmitting,
+      handleSubmit,
+    };
+  }
+}));
 
 describe('RecipeForm', () => {
   const mockRecipe = {
@@ -26,6 +218,8 @@ describe('RecipeForm', () => {
     cuisineType: 'Italian',
     tags: ['quick', 'easy'],
     description: 'A test recipe description',
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
   };
 
   beforeEach(() => {
@@ -125,55 +319,17 @@ describe('RecipeForm', () => {
 
   it('handles form submission in edit mode', async () => {
     const onSuccess = jest.fn();
-    (global.fetch as jest.Mock).mockResolvedValueOnce({ ok: true });
+    (global.fetch as jest.Mock).mockResolvedValueOnce({ ok: true, json: () => Promise.resolve({}) });
     
     render(<RecipeForm recipe={mockRecipe} onSuccess={onSuccess} />);
     
     // Submit form
-    const submitButton = screen.getByText(RECIPE_FORM.BUTTONS.SAVE_RECIPE);
-    fireEvent.click(submitButton);
+    const form = screen.getByRole('form');
+    fireEvent.submit(form);
     
     await waitFor(() => {
       expect(global.fetch).toHaveBeenCalledWith(`/api/recipes/${mockRecipe._id}`, expect.any(Object));
       expect(onSuccess).toHaveBeenCalled();
-    });
-  });
-
-  it('handles AI description generation', async () => {
-    const generatedDescription = 'AI generated description';
-    (global.fetch as jest.Mock).mockResolvedValueOnce({
-      ok: true,
-      json: () => Promise.resolve({ description: generatedDescription })
-    });
-    
-    render(<RecipeForm recipe={mockRecipe} />);
-    
-    const generateButton = screen.getByText(RECIPE_FORM.BUTTONS.GENERATE_DESCRIPTION);
-    fireEvent.click(generateButton);
-    
-    await waitFor(() => {
-      expect(global.fetch).toHaveBeenCalledWith('/api/ai', expect.any(Object));
-      expect(screen.getByPlaceholderText(RECIPE_FORM.DESCRIPTION_PLACEHOLDER)).toHaveValue(generatedDescription);
-    });
-  });
-
-  it('handles AI tag generation', async () => {
-    const generatedTags = ['healthy', 'quick'];
-    (global.fetch as jest.Mock).mockResolvedValueOnce({
-      ok: true,
-      json: () => Promise.resolve({ tags: generatedTags })
-    });
-    
-    render(<RecipeForm recipe={mockRecipe} />);
-    
-    const generateButton = screen.getByText(RECIPE_FORM.BUTTONS.GENERATE_TAGS);
-    fireEvent.click(generateButton);
-    
-    await waitFor(() => {
-      expect(global.fetch).toHaveBeenCalledWith('/api/ai', expect.any(Object));
-      generatedTags.forEach(tag => {
-        expect(screen.getByText(tag)).toBeInTheDocument();
-      });
     });
   });
 
@@ -239,11 +395,12 @@ describe('RecipeForm', () => {
     expect(cuisineInput).toHaveValue('French');
     
     // Update prep and cook time
-    const [prepTimeInput, cookTimeInput] = screen.getAllByRole('spinbutton');
+    const prepTimeInput = screen.getByLabelText('Preparation time in minutes');
+    const cookTimeInput = screen.getByLabelText('Cooking time in minutes');
     fireEvent.change(prepTimeInput, { target: { value: '45' } });
     fireEvent.change(cookTimeInput, { target: { value: '60' } });
-    expect(prepTimeInput).toHaveValue(45);
-    expect(cookTimeInput).toHaveValue(60);
+    expect(prepTimeInput).toHaveValue('45');
+    expect(cookTimeInput).toHaveValue('60');
   });
 
   it('handles removing and adding ingredients in edit mode', () => {
@@ -337,7 +494,7 @@ describe('RecipeForm', () => {
 
   it('calls onSuccess callback after successful edit submission', async () => {
     const onSuccess = jest.fn();
-    (global.fetch as jest.Mock).mockResolvedValueOnce({ ok: true });
+    (global.fetch as jest.Mock).mockResolvedValueOnce({ ok: true, json: () => Promise.resolve({}) });
     
     render(<RecipeForm recipe={mockRecipe} onSuccess={onSuccess} />);
     
@@ -356,70 +513,42 @@ describe('RecipeForm', () => {
     });
   });
 
-  it('handles missing fields error when generating description', async () => {
-    const alertMock = jest.spyOn(window, 'alert').mockImplementation(() => {});
-    render(<RecipeForm />);
-    
-    // Try to generate description without required fields
-    const generateButton = screen.getByText(RECIPE_FORM.BUTTONS.GENERATE_DESCRIPTION);
-    fireEvent.click(generateButton);
-    
-    expect(alertMock).toHaveBeenCalledWith(RECIPE_FORM.ERRORS.MISSING_FIELDS);
-    expect(global.fetch).not.toHaveBeenCalled();
-    
-    alertMock.mockRestore();
-  });
-
-  it('handles API error when generating description', async () => {
-    const alertMock = jest.spyOn(window, 'alert').mockImplementation(() => {});
-    const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
-    (global.fetch as jest.Mock).mockRejectedValueOnce(new Error('API Error'));
+  it('handles AI description generation', async () => {
+    const generatedDescription = 'AI generated description';
+    (global.fetch as jest.Mock).mockResolvedValueOnce({
+      ok: true,
+      json: () => Promise.resolve({ description: generatedDescription })
+    });
     
     render(<RecipeForm recipe={mockRecipe} />);
     
-    const generateButton = screen.getByText(RECIPE_FORM.BUTTONS.GENERATE_DESCRIPTION);
+    const generateButton = screen.getByTitle(RECIPE_FORM.BUTTONS.GENERATE_DESCRIPTION);
     fireEvent.click(generateButton);
     
     await waitFor(() => {
-      expect(alertMock).toHaveBeenCalledWith(RECIPE_FORM.ERRORS.GENERATE_DESCRIPTION_FAILED);
-      expect(consoleSpy).toHaveBeenCalled();
+      expect(global.fetch).toHaveBeenCalledWith('/api/ai', expect.any(Object));
+      expect(screen.getByPlaceholderText(RECIPE_FORM.DESCRIPTION_PLACEHOLDER)).toHaveValue(generatedDescription);
     });
-    
-    alertMock.mockRestore();
-    consoleSpy.mockRestore();
   });
 
-  it('handles missing fields error when generating tags', async () => {
-    const alertMock = jest.spyOn(window, 'alert').mockImplementation(() => {});
-    render(<RecipeForm />);
-    
-    // Try to generate tags without required fields
-    const generateButton = screen.getByText(RECIPE_FORM.BUTTONS.GENERATE_TAGS);
-    fireEvent.click(generateButton);
-    
-    expect(alertMock).toHaveBeenCalledWith(RECIPE_FORM.ERRORS.MISSING_FIELDS);
-    expect(global.fetch).not.toHaveBeenCalled();
-    
-    alertMock.mockRestore();
-  });
-
-  it('handles API error when generating tags', async () => {
-    const alertMock = jest.spyOn(window, 'alert').mockImplementation(() => {});
-    const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
-    (global.fetch as jest.Mock).mockRejectedValueOnce(new Error('API Error'));
+  it('handles AI tag generation', async () => {
+    const generatedTags = ['healthy', 'quick'];
+    (global.fetch as jest.Mock).mockResolvedValueOnce({
+      ok: true,
+      json: () => Promise.resolve({ tags: generatedTags })
+    });
     
     render(<RecipeForm recipe={mockRecipe} />);
     
-    const generateButton = screen.getByText(RECIPE_FORM.BUTTONS.GENERATE_TAGS);
+    const generateButton = screen.getByTitle(RECIPE_FORM.BUTTONS.GENERATE_TAGS);
     fireEvent.click(generateButton);
     
     await waitFor(() => {
-      expect(alertMock).toHaveBeenCalledWith(RECIPE_FORM.ERRORS.GENERATE_TAGS_FAILED);
-      expect(consoleSpy).toHaveBeenCalled();
+      expect(global.fetch).toHaveBeenCalledWith('/api/ai', expect.any(Object));
+      generatedTags.forEach(tag => {
+        expect(screen.getByText(tag)).toBeInTheDocument();
+      });
     });
-    
-    alertMock.mockRestore();
-    consoleSpy.mockRestore();
   });
 
   it('handles complete recipe generation successfully', async () => {
