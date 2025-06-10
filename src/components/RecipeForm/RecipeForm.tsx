@@ -230,44 +230,44 @@ export default function RecipeForm({ recipe }: RecipeFormProps) {
           href={recipe ? `/recipes/${recipe._id}` : '/'}
           className="inline-flex items-center text-[#819A91] hover:text-[#A7C1A8]"
         >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
             className="h-7 w-7 sm:h-5 sm:w-5 sm:mr-1"
             viewBox="0 0 20 20"
             fill="currentColor"
-          >
-            <path
+              >
+                <path
               fillRule="evenodd"
               d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z"
               clipRule="evenodd"
-            />
-          </svg>
+                />
+              </svg>
           <span className="hidden sm:inline">Back to Recipe</span>
         </Link>
         <div className="flex gap-4">
-          <label className="bg-[#819A91] text-white px-4 py-2 rounded-md hover:bg-[#A7C1A8] cursor-pointer transition-colors">
-            {RECIPE_FORM.BUTTONS.UPLOAD_IMAGE}
-            <input
-              type="file"
-              accept="image/*"
-              onChange={handleImageUpload}
-              className="hidden"
-            />
-          </label>
-          {imagePreview && (
-            <button
-              type="button"
-              onClick={() => {
-                setImagePreview(null);
-                setFormData(prev => ({ ...prev, imageUrl: '' }));
-              }}
-              className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600 transition-colors"
-            >
-              {RECIPE_FORM.BUTTONS.REMOVE_IMAGE}
-            </button>
-          )}
+            <label className="bg-[#819A91] text-white px-4 py-2 rounded-md hover:bg-[#A7C1A8] cursor-pointer transition-colors">
+              {RECIPE_FORM.BUTTONS.UPLOAD_IMAGE}
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleImageUpload}
+                className="hidden"
+              />
+            </label>
+            {imagePreview && (
+              <button
+                type="button"
+                onClick={() => {
+                  setImagePreview(null);
+                  setFormData(prev => ({ ...prev, imageUrl: '' }));
+                }}
+                className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600 transition-colors"
+              >
+                {RECIPE_FORM.BUTTONS.REMOVE_IMAGE}
+              </button>
+            )}
+          </div>
         </div>
-      </div>
 
       <div className="bg-white rounded-lg shadow-lg overflow-hidden border border-[#D1D8BE]">
         <div className="relative aspect-video">
@@ -390,13 +390,40 @@ export default function RecipeForm({ recipe }: RecipeFormProps) {
                 />
               </svg>
               <input
-                type="number"
-                min="0"
-                max="999"
+                type="text"
+                pattern="[0-9]*"
+                inputMode="numeric"
                 required
-                value={formData.prepTime}
-                onChange={(e) => setFormData({ ...formData, prepTime: parseInt(e.target.value) })}
-                className="w-12 border-0 focus:ring-2 focus:ring-[#4A5A53] bg-[#F5F6F0] text-[#4A5A53] rounded-md px-2 py-1 focus:outline-none selection:bg-[#819A91] selection:text-white [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                value={formData.prepTime === 0 ? '0' : formData.prepTime.toString()}
+                onKeyDown={(e) => {
+                  // Prevent 'e', '+', '-' characters
+                  if (['e', 'E', '+', '-'].includes(e.key)) {
+                    e.preventDefault();
+                  }
+                }}
+                onPaste={(e) => {
+                  // Get pasted content and ensure it's numeric and within limits
+                  const pastedText = e.clipboardData.getData('text');
+                  if (!/^\d+$/.test(pastedText) || pastedText.length > 3) {
+                    e.preventDefault();
+                  }
+                }}
+                onChange={(e) => {
+                  let value = e.target.value.replace(/[^\d]/g, '').slice(0, 3);
+                  
+                  // Convert empty string to '0'
+                  if (value === '') {
+                    value = '0';
+                  } else {
+                    // Remove leading zeros
+                    value = value.replace(/^0+/, '') || '0';
+                  }
+                  
+                  const numValue = parseInt(value);
+                  setFormData({ ...formData, prepTime: Math.min(numValue, 999) });
+                }}
+                className="w-12 border-0 focus:ring-2 focus:ring-[#4A5A53] bg-[#F5F6F0] text-[#4A5A53] rounded-md px-2 py-1 focus:outline-none selection:bg-[#819A91] selection:text-white text-center"
+                aria-label="Preparation time in minutes"
               />
               <span className="ml-1">{RECIPE_FORM.LABELS.MIN_PREP}</span>
             </div>
@@ -416,13 +443,40 @@ export default function RecipeForm({ recipe }: RecipeFormProps) {
                 />
               </svg>
               <input
-                type="number"
-                min="0"
-                max="999"
+                type="text"
+                pattern="[0-9]*"
+                inputMode="numeric"
                 required
-                value={formData.cookTime}
-                onChange={(e) => setFormData({ ...formData, cookTime: parseInt(e.target.value) })}
-                className="w-12 border-0 focus:ring-2 focus:ring-[#4A5A53] bg-[#F5F6F0] text-[#4A5A53] rounded-md px-2 py-1 focus:outline-none selection:bg-[#819A91] selection:text-white [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                value={formData.cookTime === 0 ? '0' : formData.cookTime.toString()}
+                onKeyDown={(e) => {
+                  // Prevent 'e', '+', '-' characters
+                  if (['e', 'E', '+', '-'].includes(e.key)) {
+                    e.preventDefault();
+                  }
+                }}
+                onPaste={(e) => {
+                  // Get pasted content and ensure it's numeric and within limits
+                  const pastedText = e.clipboardData.getData('text');
+                  if (!/^\d+$/.test(pastedText) || pastedText.length > 3) {
+                    e.preventDefault();
+                  }
+                }}
+                onChange={(e) => {
+                  let value = e.target.value.replace(/[^\d]/g, '').slice(0, 3);
+                  
+                  // Convert empty string to '0'
+                  if (value === '') {
+                    value = '0';
+                  } else {
+                    // Remove leading zeros
+                    value = value.replace(/^0+/, '') || '0';
+                  }
+                  
+                  const numValue = parseInt(value);
+                  setFormData({ ...formData, cookTime: Math.min(numValue, 999) });
+                }}
+                className="w-12 border-0 focus:ring-2 focus:ring-[#4A5A53] bg-[#F5F6F0] text-[#4A5A53] rounded-md px-2 py-1 focus:outline-none selection:bg-[#819A91] selection:text-white text-center"
+                aria-label="Cooking time in minutes"
               />
               <span className="ml-1">{RECIPE_FORM.LABELS.MIN_COOK}</span>
             </div>

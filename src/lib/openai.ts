@@ -72,7 +72,7 @@ export async function generateCompleteRecipe(title: string) {
       messages: [
         {
           role: "system",
-          content: "You are a professional chef and recipe developer. Given only the recipe title, generate a complete, realistic, high-quality recipe as JSON. Ensure all components are present: description, ingredients (as a list of strings), step-by-step instructions (clear and concise), preparation and cook time in minutes, cuisine type, and three relevant tags. Keep it chef-level but accessible for other professionals. Prioritize clarity, realism, and efficiency. Assume a professional kitchen context with appropriate shorthand. Instructions should be step-based (1 idea per step)."
+          content: "You are a professional chef and recipe developer. Given only the recipe title, generate a complete, realistic, high-quality recipe as JSON. Ensure all components are present: description (string), ingredients (array of strings), instructions (array of strings with numbered steps), preparation and cook time in minutes (numbers), cuisine type (string), and three relevant tags (array of strings). Keep it chef-level but accessible for other professionals. Prioritize clarity, realism, and efficiency. Assume a professional kitchen context with appropriate shorthand. Each instruction should be a clear, concise string describing a single step."
         },
         {
           role: "user",
@@ -85,12 +85,28 @@ export async function generateCompleteRecipe(title: string) {
     });
 
     const recipeData = JSON.parse(response.choices[0].message.content || '{}');
-    return {
+    
+    // Ensure instructions are properly formatted as strings
+    const formattedInstructions = recipeData.instructions?.map((instruction: any) => 
+      typeof instruction === 'object' ? instruction.text || String(instruction) : String(instruction)
+    ) || [];
+
+    // Ensure cuisine type is a string
+    const cuisineType = typeof recipeData.cuisineType === 'string' ? 
+      recipeData.cuisineType : 
+      (recipeData.cuisine || recipeData.type || 'Other');
+
+    const formattedRecipe = {
       ...recipeData,
+      instructions: formattedInstructions,
+      cuisineType,
       prepTime: Math.min(Math.max(recipeData.prepTime || 15, 5), 120), // Ensure prep time is between 5-120 minutes
       cookTime: Math.min(Math.max(recipeData.cookTime || 20, 5), 360), // Ensure cook time is between 5-360 minutes
       tags: (recipeData.tags || []).slice(0, 3), // Ensure max 3 tags
     };
+
+    console.log('Formatted Recipe:', formattedRecipe);
+    return formattedRecipe;
   } catch (error) {
     console.error('Error generating complete recipe:', error);
     throw error;
