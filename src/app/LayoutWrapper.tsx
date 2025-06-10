@@ -57,9 +57,23 @@ export function LayoutWrapper({ children, caveatClassName }: LayoutWrapperProps)
             </div>
             <Link 
               href="/recipes/new"
-              className="bg-[#D1D8BE] text-[#819A91] px-4 py-2 rounded hover:bg-white transition-colors font-medium"
+              className="bg-[#D1D8BE] text-[#819A91] px-4 py-2 rounded hover:bg-white transition-colors font-medium flex items-center"
             >
-              New Recipe +
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-6 w-6 sm:hidden"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 4v16m8-8H4"
+                />
+              </svg>
+              <span className="hidden sm:inline">New Recipe +</span>
             </Link>
           </div>
         </div>

@@ -9,12 +9,12 @@ export interface Recipe {
   cuisineType: string;
   tags: string[];
   description: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface RecipeFormProps {
   recipe?: Recipe;
-  onCancel?: () => void;
-  onSuccess?: () => void;
 }
 
 export interface RecipeGridProps {

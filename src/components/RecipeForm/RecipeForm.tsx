@@ -5,14 +5,18 @@ import Image from 'next/image';
 import { useAIFeatures } from '@/context/AIFeaturesContext';
 import { Recipe, RecipeFormProps } from '@/types/recipe';
 import { RECIPE_FORM } from '@/constants';
+import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 
 type FormData = Omit<Recipe, '_id'>;
 
-export default function RecipeForm({ recipe, onSuccess }: RecipeFormProps) {
+export default function RecipeForm({ recipe }: RecipeFormProps) {
+  const router = useRouter();
   const showAIFeatures = useAIFeatures();
   const [formData, setFormData] = useState<FormData>(
     recipe || {
       title: '',
+      description: '',
       ingredients: [''],
       instructions: [''],
       imageUrl: '',
@@ -20,7 +24,8 @@ export default function RecipeForm({ recipe, onSuccess }: RecipeFormProps) {
       cookTime: 0,
       cuisineType: '',
       tags: [],
-      description: '',
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
     }
   );
 
@@ -95,11 +100,12 @@ export default function RecipeForm({ recipe, onSuccess }: RecipeFormProps) {
         throw new Error(RECIPE_FORM.ERRORS.SAVE_FAILED);
       }
 
-      if (recipe && onSuccess) {
-        onSuccess();
+      if (recipe) {
+        router.push(`/recipes/${recipe._id}`);
       } else {
-        window.location.href = '/';
+        router.push('/');
       }
+      router.refresh();
     } catch (error) {
       console.error('Error saving recipe:', error);
       alert(RECIPE_FORM.ERRORS.SAVE_FAILED);
@@ -218,8 +224,52 @@ export default function RecipeForm({ recipe, onSuccess }: RecipeFormProps) {
   };
 
   return (
-    <div className="max-w-4xl mx-auto py-8 sm:px-4">
-      <div className="bg-white rounded-lg shadow-lg overflow-hidden">
+    <div className="max-w-4xl mx-auto">
+      <div className="flex justify-between items-center mb-6">
+        <Link
+          href={recipe ? `/recipes/${recipe._id}` : '/'}
+          className="inline-flex items-center text-[#819A91] hover:text-[#A7C1A8]"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className="h-7 w-7 sm:h-5 sm:w-5 sm:mr-1"
+            viewBox="0 0 20 20"
+            fill="currentColor"
+          >
+            <path
+              fillRule="evenodd"
+              d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z"
+              clipRule="evenodd"
+            />
+          </svg>
+          <span className="hidden sm:inline">Back to Recipe</span>
+        </Link>
+        <div className="flex gap-4">
+          <label className="bg-[#819A91] text-white px-4 py-2 rounded-md hover:bg-[#A7C1A8] cursor-pointer transition-colors">
+            {RECIPE_FORM.BUTTONS.UPLOAD_IMAGE}
+            <input
+              type="file"
+              accept="image/*"
+              onChange={handleImageUpload}
+              className="hidden"
+            />
+          </label>
+          {imagePreview && (
+            <button
+              type="button"
+              onClick={() => {
+                setImagePreview(null);
+                setFormData(prev => ({ ...prev, imageUrl: '' }));
+              }}
+              className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600 transition-colors"
+            >
+              {RECIPE_FORM.BUTTONS.REMOVE_IMAGE}
+            </button>
+          )}
+        </div>
+      </div>
+
+      <div className="bg-white rounded-lg shadow-lg overflow-hidden border border-[#D1D8BE]">
         <div className="relative aspect-video">
           {imagePreview ? (
             <Image
@@ -247,29 +297,6 @@ export default function RecipeForm({ recipe, onSuccess }: RecipeFormProps) {
               </svg>
             </div>
           )}
-          <div className="absolute top-4 right-4 flex gap-2">
-            <label className="bg-[#819A91] text-white px-4 py-2 rounded-md hover:bg-[#A7C1A8] cursor-pointer transition-colors">
-              {RECIPE_FORM.BUTTONS.UPLOAD_IMAGE}
-              <input
-                type="file"
-                accept="image/*"
-                onChange={handleImageUpload}
-                className="hidden"
-              />
-            </label>
-            {imagePreview && (
-              <button
-                type="button"
-                onClick={() => {
-                  setImagePreview(null);
-                  setFormData(prev => ({ ...prev, imageUrl: '' }));
-                }}
-                className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600 transition-colors"
-              >
-                {RECIPE_FORM.BUTTONS.REMOVE_IMAGE}
-              </button>
-            )}
-          </div>
         </div>
 
         <form 
