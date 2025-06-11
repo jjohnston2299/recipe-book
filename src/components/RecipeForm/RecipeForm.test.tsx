@@ -1,6 +1,6 @@
 import { render, screen, fireEvent, waitFor } from '@/utils/test-utils';
 import RecipeForm from './RecipeForm';
-import { RECIPE_FORM } from '@/constants';
+import { RECIPE_FORM, LAYOUT } from '@/constants';
 import '@testing-library/jest-dom';
 import { useState, FormEvent } from 'react';
 import { Recipe } from '@/types/recipe';
@@ -200,8 +200,8 @@ jest.mock('@/hooks/useRecipeForm', () => ({
       setImagePreview,
       uploadProgress,
       handleImageUpload,
-      isSubmitting,
       handleSubmit,
+      isSubmitting,
     };
   }
 }));
@@ -233,7 +233,13 @@ describe('RecipeForm', () => {
   it('renders empty form in create mode', () => {
     render(<RecipeForm />);
     
-    // Check if all form fields are present and empty
+    // Check if navigation elements are present
+    expect(screen.getByText(LAYOUT.NAVIGATION.BACK_TO_RECIPE)).toBeInTheDocument();
+    
+    // Check if image upload buttons are present
+    expect(screen.getByText(RECIPE_FORM.BUTTONS.UPLOAD_IMAGE)).toBeInTheDocument();
+    
+    // Check if form fields are present and empty
     expect(screen.getByPlaceholderText(RECIPE_FORM.TITLE_PLACEHOLDER)).toHaveValue('');
     expect(screen.getByPlaceholderText(RECIPE_FORM.DESCRIPTION_PLACEHOLDER)).toHaveValue('');
     expect(screen.getByPlaceholderText(RECIPE_FORM.CUISINE_PLACEHOLDER)).toHaveValue('');
@@ -246,7 +252,7 @@ describe('RecipeForm', () => {
   it('renders form with recipe data in edit mode', () => {
     render(<RecipeForm recipe={mockRecipe} />);
     
-    // Check if form fields are populated with recipe data
+    // Check if recipe data is populated
     expect(screen.getByPlaceholderText(RECIPE_FORM.TITLE_PLACEHOLDER)).toHaveValue(mockRecipe.title);
     expect(screen.getByPlaceholderText(RECIPE_FORM.DESCRIPTION_PLACEHOLDER)).toHaveValue(mockRecipe.description);
     expect(screen.getByPlaceholderText(RECIPE_FORM.CUISINE_PLACEHOLDER)).toHaveValue(mockRecipe.cuisineType);
@@ -258,6 +264,34 @@ describe('RecipeForm', () => {
     mockRecipe.instructions.forEach(instruction => {
       expect(screen.getByDisplayValue(instruction)).toBeInTheDocument();
     });
+    
+    // Check if tags are displayed
+    mockRecipe.tags.forEach(tag => {
+      expect(screen.getByText(tag)).toBeInTheDocument();
+    });
+  });
+
+  it('renders AI feature buttons when AI is enabled', () => {
+    render(<RecipeForm recipe={mockRecipe} />);
+    
+    expect(screen.getByTitle(RECIPE_FORM.BUTTONS.GENERATE_DESCRIPTION)).toBeInTheDocument();
+    expect(screen.getByTitle(RECIPE_FORM.BUTTONS.GENERATE_TAGS)).toBeInTheDocument();
+    expect(screen.getByText(RECIPE_FORM.BUTTONS.GENERATE_COMPLETE)).toBeInTheDocument();
+  });
+
+  it('renders image preview when imageUrl is provided', () => {
+    render(<RecipeForm recipe={mockRecipe} />);
+    
+    const image = screen.getByAltText('Recipe preview');
+    expect(image).toBeInTheDocument();
+    expect(image).toHaveAttribute('src', expect.stringContaining(mockRecipe.imageUrl));
+  });
+
+  it('renders placeholder when no image is provided', () => {
+    render(<RecipeForm />);
+    
+    expect(screen.queryByAltText('Recipe preview')).not.toBeInTheDocument();
+    expect(document.querySelector('svg')).toBeInTheDocument();
   });
 
   it('handles adding and removing ingredients', () => {
@@ -351,6 +385,10 @@ describe('RecipeForm', () => {
     
     fireEvent.change(input);
     
+    // First, check for uploading status
+    expect(screen.getByText(RECIPE_FORM.UPLOAD_STATUS.UPLOADING)).toBeInTheDocument();
+    
+    // Then wait for success status
     await waitFor(() => {
       expect(global.fetch).toHaveBeenCalledWith('/api/images', expect.any(Object));
       expect(screen.getByText(RECIPE_FORM.UPLOAD_STATUS.SUCCESS)).toBeInTheDocument();
@@ -468,7 +506,7 @@ describe('RecipeForm', () => {
     expect(screen.getByText('new-tag')).toBeInTheDocument();
   });
 
-  it('handles image management in edit mode', () => {
+  it('handles image management in edit mode', async () => {
     render(<RecipeForm recipe={mockRecipe} />);
     
     // Verify initial image is displayed

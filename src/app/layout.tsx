@@ -1,21 +1,11 @@
 import './globals.css'
-import { Inter, Caveat } from 'next/font/google'
-import { Edu_SA_Beginner } from 'next/font/google'
 import { LayoutWrapper } from './LayoutWrapper'
-
-const inter = Inter({ subsets: ['latin'] })
-const eduSA = Edu_SA_Beginner({ 
-  subsets: ['latin'],
-  variable: '--font-edu-sa',
-})
-const caveat = Caveat({
-  subsets: ['latin'],
-  display: 'swap',
-});
+import { dmSans, lora, outfit } from '@/styles/fonts'
+import { LAYOUT } from '@/constants'
 
 export const metadata = {
-  title: 'Recipe Book',
-  description: 'A personal recipe management system with AI-powered recommendations',
+  title: LAYOUT.APP_NAME,
+  description: LAYOUT.APP_DESCRIPTION,
 }
 
 export default function RootLayout({
@@ -24,9 +14,9 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en">
-      <body className={`${inter.className} ${eduSA.variable} bg-[#F5F6F0]`}>
-        <LayoutWrapper caveatClassName={caveat.className}>
+    <html lang="en" className={`${dmSans.variable} ${lora.variable} ${outfit.variable}`}>
+      <body className="bg-[#F5F6F0] font-sans">
+        <LayoutWrapper caveatClassName="font-display">
           {children}
         </LayoutWrapper>
       </body>

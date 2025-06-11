@@ -1,9 +1,18 @@
 import { renderHook, act } from '@testing-library/react';
 import { useRecipeAI } from './useRecipeAI';
 import { RECIPE_FORM } from '@/constants';
+import { NetworkError, AIServiceError } from '@/services/api/errors';
 
-// Mock fetch for API calls
-global.fetch = jest.fn();
+// Mock recipeApi
+jest.mock('@/services/api/recipeApi', () => ({
+  recipeApi: {
+    ai: {
+      generateDescription: jest.fn(),
+      generateTags: jest.fn(),
+      generateComplete: jest.fn()
+    }
+  }
+}));
 
 describe('useRecipeAI', () => {
   const mockFormData = {
@@ -24,7 +33,6 @@ describe('useRecipeAI', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    (global.fetch as jest.Mock).mockReset();
   });
 
   it('initializes with default states', () => {
@@ -33,15 +41,14 @@ describe('useRecipeAI', () => {
     expect(result.current.isGeneratingDesc).toBe(false);
     expect(result.current.isGeneratingTags).toBe(false);
     expect(result.current.isGeneratingComplete).toBe(false);
+    expect(result.current.error).toBeNull();
   });
 
   describe('generateDescription', () => {
     it('handles successful description generation', async () => {
       const generatedDescription = 'AI generated description';
-      (global.fetch as jest.Mock).mockResolvedValueOnce({
-        ok: true,
-        json: () => Promise.resolve({ description: generatedDescription })
-      });
+      const { recipeApi } = require('@/services/api/recipeApi');
+      recipeApi.ai.generateDescription.mockResolvedValueOnce({ description: generatedDescription });
 
       const { result } = renderHook(() => useRecipeAI(mockFormData, mockSetFormData));
 
@@ -50,38 +57,29 @@ describe('useRecipeAI', () => {
       });
 
       expect(mockSetFormData).toHaveBeenCalledWith(expect.any(Function));
-      expect(global.fetch).toHaveBeenCalledWith('/api/ai', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          action: 'generate-description',
-          title: mockFormData.title,
-          ingredients: mockFormData.ingredients,
-          instructions: mockFormData.instructions
-        })
+      expect(recipeApi.ai.generateDescription).toHaveBeenCalledWith({
+        title: mockFormData.title,
+        ingredients: mockFormData.ingredients,
+        instructions: mockFormData.instructions
       });
+      expect(result.current.error).toBeNull();
     });
 
     it('handles missing fields error', async () => {
-      const alertMock = jest.spyOn(window, 'alert').mockImplementation(() => {});
       const emptyFormData = { ...mockFormData, title: '' };
-
       const { result } = renderHook(() => useRecipeAI(emptyFormData, mockSetFormData));
 
       await act(async () => {
         await result.current.generateDescription();
       });
 
-      expect(alertMock).toHaveBeenCalledWith(RECIPE_FORM.ERRORS.MISSING_FIELDS);
-      expect(global.fetch).not.toHaveBeenCalled();
-
-      alertMock.mockRestore();
+      expect(result.current.error).toBe(RECIPE_FORM.ERRORS.MISSING_FIELDS);
+      expect(mockSetFormData).not.toHaveBeenCalled();
     });
 
     it('handles API error', async () => {
-      const alertMock = jest.spyOn(window, 'alert').mockImplementation(() => {});
-      const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
-      (global.fetch as jest.Mock).mockRejectedValueOnce(new Error('API Error'));
+      const { recipeApi } = require('@/services/api/recipeApi');
+      recipeApi.ai.generateDescription.mockRejectedValueOnce(new Error('API Error'));
 
       const { result } = renderHook(() => useRecipeAI(mockFormData, mockSetFormData));
 
@@ -89,21 +87,44 @@ describe('useRecipeAI', () => {
         await result.current.generateDescription();
       });
 
-      expect(alertMock).toHaveBeenCalledWith(RECIPE_FORM.ERRORS.GENERATE_DESCRIPTION_FAILED);
-      expect(consoleSpy).toHaveBeenCalled();
+      expect(result.current.error).toBe(RECIPE_FORM.ERRORS.GENERATE_DESCRIPTION_FAILED);
+      expect(result.current.isGeneratingDesc).toBe(false);
+    });
 
-      alertMock.mockRestore();
-      consoleSpy.mockRestore();
+    it('handles network error', async () => {
+      const { recipeApi } = require('@/services/api/recipeApi');
+      recipeApi.ai.generateDescription.mockRejectedValueOnce(new NetworkError());
+
+      const { result } = renderHook(() => useRecipeAI(mockFormData, mockSetFormData));
+
+      await act(async () => {
+        await result.current.generateDescription();
+      });
+
+      expect(result.current.error).toBe(RECIPE_FORM.ERRORS.NETWORK_ERROR);
+      expect(result.current.isGeneratingDesc).toBe(false);
+    });
+
+    it('handles AI service error', async () => {
+      const { recipeApi } = require('@/services/api/recipeApi');
+      recipeApi.ai.generateDescription.mockRejectedValueOnce(new AIServiceError('AI service failed'));
+
+      const { result } = renderHook(() => useRecipeAI(mockFormData, mockSetFormData));
+
+      await act(async () => {
+        await result.current.generateDescription();
+      });
+
+      expect(result.current.error).toBe(RECIPE_FORM.ERRORS.AI_SERVICE_ERROR);
+      expect(result.current.isGeneratingDesc).toBe(false);
     });
   });
 
   describe('generateTags', () => {
     it('handles successful tag generation', async () => {
       const generatedTags = ['healthy', 'quick'];
-      (global.fetch as jest.Mock).mockResolvedValueOnce({
-        ok: true,
-        json: () => Promise.resolve({ tags: generatedTags })
-      });
+      const { recipeApi } = require('@/services/api/recipeApi');
+      recipeApi.ai.generateTags.mockResolvedValueOnce({ tags: generatedTags });
 
       const { result } = renderHook(() => useRecipeAI(mockFormData, mockSetFormData));
 
@@ -112,38 +133,29 @@ describe('useRecipeAI', () => {
       });
 
       expect(mockSetFormData).toHaveBeenCalledWith(expect.any(Function));
-      expect(global.fetch).toHaveBeenCalledWith('/api/ai', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          action: 'suggest-tags',
-          title: mockFormData.title,
-          ingredients: mockFormData.ingredients,
-          instructions: mockFormData.instructions
-        })
+      expect(recipeApi.ai.generateTags).toHaveBeenCalledWith({
+        title: mockFormData.title,
+        ingredients: mockFormData.ingredients,
+        instructions: mockFormData.instructions
       });
+      expect(result.current.error).toBeNull();
     });
 
     it('handles missing fields error', async () => {
-      const alertMock = jest.spyOn(window, 'alert').mockImplementation(() => {});
       const emptyFormData = { ...mockFormData, title: '' };
-
       const { result } = renderHook(() => useRecipeAI(emptyFormData, mockSetFormData));
 
       await act(async () => {
         await result.current.generateTags();
       });
 
-      expect(alertMock).toHaveBeenCalledWith(RECIPE_FORM.ERRORS.MISSING_FIELDS);
-      expect(global.fetch).not.toHaveBeenCalled();
-
-      alertMock.mockRestore();
+      expect(result.current.error).toBe(RECIPE_FORM.ERRORS.MISSING_FIELDS);
+      expect(mockSetFormData).not.toHaveBeenCalled();
     });
 
     it('handles API error', async () => {
-      const alertMock = jest.spyOn(window, 'alert').mockImplementation(() => {});
-      const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
-      (global.fetch as jest.Mock).mockRejectedValueOnce(new Error('API Error'));
+      const { recipeApi } = require('@/services/api/recipeApi');
+      recipeApi.ai.generateTags.mockRejectedValueOnce(new Error('API Error'));
 
       const { result } = renderHook(() => useRecipeAI(mockFormData, mockSetFormData));
 
@@ -151,11 +163,8 @@ describe('useRecipeAI', () => {
         await result.current.generateTags();
       });
 
-      expect(alertMock).toHaveBeenCalledWith(RECIPE_FORM.ERRORS.GENERATE_TAGS_FAILED);
-      expect(consoleSpy).toHaveBeenCalled();
-
-      alertMock.mockRestore();
-      consoleSpy.mockRestore();
+      expect(result.current.error).toBe(RECIPE_FORM.ERRORS.GENERATE_TAGS_FAILED);
+      expect(result.current.isGeneratingTags).toBe(false);
     });
   });
 
@@ -171,10 +180,8 @@ describe('useRecipeAI', () => {
     };
 
     it('handles successful complete recipe generation', async () => {
-      (global.fetch as jest.Mock).mockResolvedValueOnce({
-        ok: true,
-        json: () => Promise.resolve({ recipe: generatedRecipe })
-      });
+      const { recipeApi } = require('@/services/api/recipeApi');
+      recipeApi.ai.generateComplete.mockResolvedValueOnce({ recipe: generatedRecipe });
 
       const { result } = renderHook(() => useRecipeAI(mockFormData, mockSetFormData));
 
@@ -183,36 +190,25 @@ describe('useRecipeAI', () => {
       });
 
       expect(mockSetFormData).toHaveBeenCalledWith(expect.any(Function));
-      expect(global.fetch).toHaveBeenCalledWith('/api/ai', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          action: 'generate-complete',
-          title: mockFormData.title
-        })
-      });
+      expect(recipeApi.ai.generateComplete).toHaveBeenCalledWith(mockFormData.title);
+      expect(result.current.error).toBeNull();
     });
 
     it('handles missing title error', async () => {
-      const alertMock = jest.spyOn(window, 'alert').mockImplementation(() => {});
       const emptyFormData = { ...mockFormData, title: '' };
-
       const { result } = renderHook(() => useRecipeAI(emptyFormData, mockSetFormData));
 
       await act(async () => {
         await result.current.generateCompleteRecipe();
       });
 
-      expect(alertMock).toHaveBeenCalledWith(RECIPE_FORM.ERRORS.MISSING_TITLE);
-      expect(global.fetch).not.toHaveBeenCalled();
-
-      alertMock.mockRestore();
+      expect(result.current.error).toBe(RECIPE_FORM.ERRORS.MISSING_TITLE);
+      expect(mockSetFormData).not.toHaveBeenCalled();
     });
 
     it('handles API error', async () => {
-      const alertMock = jest.spyOn(window, 'alert').mockImplementation(() => {});
-      const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
-      (global.fetch as jest.Mock).mockRejectedValueOnce(new Error('API Error'));
+      const { recipeApi } = require('@/services/api/recipeApi');
+      recipeApi.ai.generateComplete.mockRejectedValueOnce(new Error('API Error'));
 
       const { result } = renderHook(() => useRecipeAI(mockFormData, mockSetFormData));
 
@@ -220,11 +216,8 @@ describe('useRecipeAI', () => {
         await result.current.generateCompleteRecipe();
       });
 
-      expect(alertMock).toHaveBeenCalledWith(RECIPE_FORM.ERRORS.GENERATE_RECIPE_FAILED);
-      expect(consoleSpy).toHaveBeenCalled();
-
-      alertMock.mockRestore();
-      consoleSpy.mockRestore();
+      expect(result.current.error).toBe(RECIPE_FORM.ERRORS.GENERATE_RECIPE_FAILED);
+      expect(result.current.isGeneratingComplete).toBe(false);
     });
   });
 }); 

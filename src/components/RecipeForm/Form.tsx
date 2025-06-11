@@ -157,7 +157,7 @@ export default function Form({
               setFormData({ ...formData, prepTime: Math.min(numValue, 999) });
             }}
             className="w-12 border-0 focus:ring-2 focus:ring-[#4A5A53] bg-[#F5F6F0] text-[#4A5A53] rounded-md px-2 py-1 focus:outline-none selection:bg-[#819A91] selection:text-white text-center"
-            aria-label="Preparation time in minutes"
+            aria-label={RECIPE_FORM.ARIA_LABELS.PREP_TIME}
           />
           <span className="ml-1">{RECIPE_FORM.LABELS.MIN_PREP}</span>
         </div>
@@ -210,7 +210,7 @@ export default function Form({
               setFormData({ ...formData, cookTime: Math.min(numValue, 999) });
             }}
             className="w-12 border-0 focus:ring-2 focus:ring-[#4A5A53] bg-[#F5F6F0] text-[#4A5A53] rounded-md px-2 py-1 focus:outline-none selection:bg-[#819A91] selection:text-white text-center"
-            aria-label="Cooking time in minutes"
+            aria-label={RECIPE_FORM.ARIA_LABELS.COOK_TIME}
           />
           <span className="ml-1">{RECIPE_FORM.LABELS.MIN_COOK}</span>
         </div>

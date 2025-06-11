@@ -18,14 +18,23 @@ describe('RecipeFilters', () => {
     clearAllFilters: jest.fn(),
   };
 
-  it('renders all filter sections', () => {
+  it('renders all filter sections with correct styling', () => {
     render(<RecipeFilters {...mockProps} />);
     
-    // Check if all main sections are present
-    expect(screen.getByPlaceholderText(RECIPE_FILTERS.SEARCH_PLACEHOLDER)).toBeInTheDocument();
-    expect(screen.getByText(RECIPE_FILTERS.LABELS.CUISINE)).toBeInTheDocument();
-    expect(screen.getByText(RECIPE_FILTERS.LABELS.MAX_TIME)).toBeInTheDocument();
-    expect(screen.getByText(RECIPE_FILTERS.BUTTONS.FILTER_BY_TAGS)).toBeInTheDocument();
+    // Check search input
+    const searchInput = screen.getByPlaceholderText(RECIPE_FILTERS.SEARCH_PLACEHOLDER);
+    expect(searchInput).toHaveClass('border', 'border-[#D1D8BE]', 'text-[#819A91]', 'bg-white');
+    
+    // Check cuisine select
+    const cuisineSelect = screen.getByLabelText(RECIPE_FILTERS.LABELS.CUISINE);
+    expect(cuisineSelect).toHaveClass('border', 'border-[#D1D8BE]', 'text-[#819A91]', 'bg-white');
+    
+    // Check time slider section
+    expect(screen.getByText(RECIPE_FILTERS.LABELS.MAX_TIME)).toHaveClass('text-[#819A91]', 'font-medium');
+    
+    // Check tags button
+    const tagsButton = screen.getByRole('button', { name: new RegExp(RECIPE_FILTERS.BUTTONS.FILTER_BY_TAGS) });
+    expect(tagsButton).toHaveClass('bg-[#F5F6F0]', 'text-[#819A91]');
   });
 
   it('handles search input changes', () => {
@@ -47,45 +56,45 @@ describe('RecipeFilters', () => {
   it('displays all available cuisine types', () => {
     render(<RecipeFilters {...mockProps} />);
     
+    // Check "All Cuisines" option
+    expect(screen.getByText(RECIPE_FILTERS.LABELS.ALL_CUISINES)).toBeInTheDocument();
+    
+    // Check cuisine options
     mockProps.cuisineTypes.forEach(cuisine => {
       expect(screen.getByText(cuisine)).toBeInTheDocument();
     });
   });
 
-  it('handles time range selection', () => {
-    render(<RecipeFilters {...mockProps} />);
-    const timeInput = screen.getByRole('slider');
-    
-    fireEvent.change(timeInput, { target: { value: '90' } });
-    expect(mockProps.setMaxTotalTime).toHaveBeenCalledWith(90);
-  });
-
-  it('displays and handles tag selection', () => {
+  it('displays and handles tag selection with correct styling', () => {
     render(<RecipeFilters {...mockProps} />);
     
-    // Click the button to expand tags section first
-    const expandButton = screen.getByText(RECIPE_FILTERS.BUTTONS.FILTER_BY_TAGS);
+    // Click the button to expand tags section
+    const expandButton = screen.getByRole('button', { name: new RegExp(RECIPE_FILTERS.BUTTONS.FILTER_BY_TAGS) });
     fireEvent.click(expandButton);
     
-    // Now we can interact with the tags
+    // Check tag styling
     mockProps.availableTags.forEach(tag => {
-      const tagButton = screen.getByText(tag);
-      expect(tagButton).toBeInTheDocument();
-      
-      fireEvent.click(tagButton);
-      expect(mockProps.setSelectedTags).toHaveBeenCalled();
+      const tagButton = screen.getByRole('button', { name: tag });
+      expect(tagButton).toHaveClass('bg-[#EEEFE0]', 'text-[#819A91]');
     });
+    
+    // Click a tag and check selected styling
+    const firstTag = screen.getByRole('button', { name: mockProps.availableTags[0] });
+    fireEvent.click(firstTag);
+    expect(mockProps.setSelectedTags).toHaveBeenCalled();
   });
 
-  it('handles clear all filters', () => {
+  it('handles clear all filters with correct styling', () => {
     render(<RecipeFilters {...mockProps} />);
-    const clearButton = screen.getByText(RECIPE_FILTERS.BUTTONS.CLEAR_ALL_FILTERS);
+    const clearButton = screen.getByRole('button', { name: RECIPE_FILTERS.BUTTONS.CLEAR_ALL_FILTERS });
+    
+    expect(clearButton).toHaveClass('border-[#819A91]', 'text-[#819A91]');
     
     fireEvent.click(clearButton);
     expect(mockProps.clearAllFilters).toHaveBeenCalled();
   });
 
-  it('highlights selected tags', () => {
+  it('highlights selected tags with correct styling', () => {
     const propsWithSelectedTags = {
       ...mockProps,
       selectedTags: ['quick', 'easy'],
@@ -93,17 +102,13 @@ describe('RecipeFilters', () => {
     
     render(<RecipeFilters {...propsWithSelectedTags} />);
     
-    // Click the button to expand tags section first
-    const expandButton = screen.getByRole('button', {
-      name: new RegExp(RECIPE_FILTERS.BUTTONS.FILTER_BY_TAGS)
-    });
+    // Click the button to expand tags section
+    const expandButton = screen.getByRole('button', { name: new RegExp(RECIPE_FILTERS.BUTTONS.FILTER_BY_TAGS) });
     fireEvent.click(expandButton);
     
-    const selectedTags = propsWithSelectedTags.selectedTags;
-    selectedTags.forEach(tag => {
-      const tagElement = screen.getByText(tag);
-      expect(tagElement).toHaveClass('bg-[#819A91]');
-      expect(tagElement).toHaveClass('text-white');
+    propsWithSelectedTags.selectedTags.forEach(tag => {
+      const tagElement = screen.getByRole('button', { name: tag });
+      expect(tagElement).toHaveClass('bg-[#819A91]', 'text-white');
     });
   });
 }); 

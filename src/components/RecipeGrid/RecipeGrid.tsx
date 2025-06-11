@@ -10,7 +10,7 @@ export default function RecipeGrid({ recipes }: RecipeGridProps) {
   if (recipes.length === 0) {
     return (
       <div className="text-center py-12">
-        <p className="text-[#819A91] text-lg">
+        <p className="text-[#819A91] text-lg font-accent">
           {RECIPE_GRID.NO_RECIPES}
         </p>
       </div>
@@ -43,8 +43,8 @@ export default function RecipeGrid({ recipes }: RecipeGridProps) {
             )}
           </div>
           <div className="p-4">
-            <h2 className="text-xl font-semibold mb-2 text-[#819A91]">{recipe.title}</h2>
-            <div className="text-[#819A91]">
+            <h2 className="text-xl font-semibold mb-2 text-[#819A91] font-display">{recipe.title}</h2>
+            <div className="text-[#819A91] font-accent">
               <p>{recipe.cuisineType}</p>
               <p>{RECIPE_GRID.TOTAL_TIME} {formatTime(recipe.prepTime + recipe.cookTime)}</p>
             </div>
@@ -53,7 +53,7 @@ export default function RecipeGrid({ recipes }: RecipeGridProps) {
                 {recipe.tags.map((tag, index) => (
                   <span
                     key={index}
-                    className="bg-[#EEEFE0] text-[#819A91] px-2 py-0.5 rounded-full text-sm"
+                    className="bg-[#EEEFE0] text-[#819A91] px-2 py-0.5 rounded-full text-sm font-accent"
                   >
                     {tag}
                   </span>

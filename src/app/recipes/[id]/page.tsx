@@ -6,12 +6,7 @@ import { ObjectId } from 'mongodb';
 import EditButton from './EditButton';
 import DeleteButton from './DeleteButton';
 import { Metadata } from 'next';
-import { Caveat } from 'next/font/google';
-
-const caveat = Caveat({
-  subsets: ['latin'],
-  display: 'swap',
-});
+import { RECIPE_PAGE, LAYOUT } from '@/constants';
 
 interface Recipe {
   _id: string;
@@ -57,7 +52,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   
   if (!recipe) {
     return {
-      title: 'Recipe Not Found',
+      title: RECIPE_PAGE.METADATA.NOT_FOUND,
     };
   }
 
@@ -82,7 +77,7 @@ export default async function RecipePage({ params }: { params: Promise<{ id: str
       <div className="flex justify-between items-center mb-6">
         <Link
           href="/"
-          className="inline-flex items-center text-[#819A91] hover:text-[#A7C1A8]"
+          className="inline-flex items-center text-[#819A91] hover:text-[#A7C1A8] font-accent"
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -96,7 +91,7 @@ export default async function RecipePage({ params }: { params: Promise<{ id: str
               clipRule="evenodd"
             />
           </svg>
-          <span className="hidden sm:inline">Back to Recipes</span>
+          <span className="hidden sm:inline">{LAYOUT.NAVIGATION.BACK_TO_RECIPES}</span>
         </Link>
         <div className="flex gap-4">
           <EditButton recipe={recipe} />
@@ -136,16 +131,14 @@ export default async function RecipePage({ params }: { params: Promise<{ id: str
         </div>
 
         <div className="p-6">
-          <h1 className="text-3xl font-bold mb-4 text-[#819A91]">{recipe.title}</h1>
+          <h1 className="text-3xl font-bold mb-4 text-[#819A91] font-display">{recipe.title}</h1>
 
           {recipe.description && (
-            <p className="text-[#819A91] mb-6 italic text-lg">
-              {recipe.description}
-            </p>
+            <p className="mb-6 text-[#4A5A53] font-sans">{recipe.description}</p>
           )}
 
           <div className="flex flex-wrap gap-4 mb-6">
-            <div className="flex items-center text-[#819A91]">
+            <div className="flex items-center text-[#819A91] font-accent">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 className="h-5 w-5 mr-1"
@@ -160,9 +153,9 @@ export default async function RecipePage({ params }: { params: Promise<{ id: str
                   d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
                 />
               </svg>
-              <span>Prep: {recipe.prepTime}min</span>
+              <span>{RECIPE_PAGE.LABELS.PREP} {recipe.prepTime}{RECIPE_PAGE.UNITS.MINUTES}</span>
             </div>
-            <div className="flex items-center text-[#819A91]">
+            <div className="flex items-center text-[#819A91] font-accent">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 className="h-5 w-5 mr-1"
@@ -177,9 +170,9 @@ export default async function RecipePage({ params }: { params: Promise<{ id: str
                   d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
                 />
               </svg>
-              <span>Cook: {recipe.cookTime}min</span>
+              <span>{RECIPE_PAGE.LABELS.COOK} {recipe.cookTime}{RECIPE_PAGE.UNITS.MINUTES}</span>
             </div>
-            <div className="flex items-center text-[#819A91]">
+            <div className="flex items-center text-[#819A91] font-accent">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 className="h-5 w-5 mr-1"
@@ -194,9 +187,9 @@ export default async function RecipePage({ params }: { params: Promise<{ id: str
                   d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
                 />
               </svg>
-              <span>Total: {totalTime}min</span>
+              <span>{RECIPE_PAGE.LABELS.TOTAL} {totalTime}{RECIPE_PAGE.UNITS.MINUTES}</span>
             </div>
-            <div className="flex items-center text-[#819A91]">
+            <div className="flex items-center text-[#819A91] font-accent">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 className="h-5 w-5 mr-1"
@@ -215,39 +208,34 @@ export default async function RecipePage({ params }: { params: Promise<{ id: str
             </div>
           </div>
 
-          <div className="grid md:grid-cols-2 gap-8">
-            <div>
-              <h2 className="text-xl font-semibold mb-4 text-[#819A91]">Ingredients</h2>
-              <ul className={`list-disc list-inside space-y-2 ${caveat.className}`}>
-                {recipe.ingredients.map((ingredient, index) => (
-                  <li key={index} className="text-[#819A91] text-xl">{ingredient}</li>
-                ))}
-              </ul>
-            </div>
+          <div className="mb-6">
+            <h2 className="text-xl font-bold mb-3 text-[#819A91] font-display">{RECIPE_PAGE.LABELS.INGREDIENTS}</h2>
+            <ul className="list-disc list-inside space-y-2 text-[#4A5A53] font-sans">
+              {recipe.ingredients.map((ingredient, index) => (
+                <li key={index}>{ingredient}</li>
+              ))}
+            </ul>
+          </div>
 
-            <div>
-              <h2 className="text-xl font-semibold mb-4 text-[#819A91]">Instructions</h2>
-              <ol className={`list-decimal list-inside space-y-2 ${caveat.className}`}>
-                {recipe.instructions.map((instruction, index) => (
-                  <li key={index} className="text-[#819A91] text-xl">{instruction}</li>
-                ))}
-              </ol>
-            </div>
+          <div className="mb-6">
+            <h2 className="text-xl font-bold mb-3 text-[#819A91] font-display">{RECIPE_PAGE.LABELS.INSTRUCTIONS}</h2>
+            <ol className="list-decimal list-inside space-y-3 text-[#4A5A53] font-sans">
+              {recipe.instructions.map((instruction, index) => (
+                <li key={index} className="pl-2">{instruction}</li>
+              ))}
+            </ol>
           </div>
 
           {recipe.tags && recipe.tags.length > 0 && (
-            <div className="mt-6">
-              <h2 className="text-xl font-semibold mb-2 text-[#819A91]">Tags</h2>
-              <div className="flex flex-wrap gap-2">
-                {recipe.tags.map((tag, index) => (
-                  <span
-                    key={index}
-                    className="bg-[#EEEFE0] text-[#819A91] px-3 py-1 rounded-full text-sm"
-                  >
-                    {tag}
-                  </span>
-                ))}
-              </div>
+            <div className="flex flex-wrap gap-2">
+              {recipe.tags.map((tag, index) => (
+                <span
+                  key={index}
+                  className="bg-[#EEEFE0] text-[#819A91] px-3 py-1 rounded-full text-sm font-accent"
+                >
+                  {tag}
+                </span>
+              ))}
             </div>
           )}
         </div>

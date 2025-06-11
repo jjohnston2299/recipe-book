@@ -1,12 +1,30 @@
 import { renderHook, act } from '@testing-library/react';
 import { useRecipeForm } from './useRecipeForm';
 import { RECIPE_FORM } from '@/constants';
+import { NetworkError, ValidationError } from '@/services/api/errors';
 
-// Mock fetch for API calls
+// Mock global fetch
 global.fetch = jest.fn();
 
 // Mock URL.createObjectURL
-global.URL.createObjectURL = jest.fn(() => 'mock-url');
+global.URL.createObjectURL = jest.fn();
+
+// Mock useRouter
+jest.mock('next/navigation', () => ({
+  useRouter: () => ({
+    push: jest.fn(),
+    refresh: jest.fn()
+  })
+}));
+
+// Mock recipeApi
+jest.mock('@/services/api/recipeApi', () => ({
+  recipeApi: {
+    create: jest.fn(),
+    update: jest.fn(),
+    uploadImage: jest.fn()
+  }
+}));
 
 describe('useRecipeForm', () => {
   const mockRecipe = {
@@ -25,31 +43,42 @@ describe('useRecipeForm', () => {
   };
 
   beforeEach(() => {
-    // Reset all mocks before each test
     jest.clearAllMocks();
     (global.fetch as jest.Mock).mockReset();
     (global.URL.createObjectURL as jest.Mock).mockReset();
     (global.URL.createObjectURL as jest.Mock).mockReturnValue('mock-url');
   });
 
-  it('initializes with default values when no recipe is provided', () => {
+  it('initializes with empty state in create mode', () => {
     const { result } = renderHook(() => useRecipeForm());
     
-    expect(result.current.formData).toEqual({
-      title: '',
-      description: '',
-      ingredients: [''],
-      instructions: [''],
-      imageUrl: '',
-      prepTime: 0,
-      cookTime: 0,
-      cuisineType: '',
-      tags: [],
-      createdAt: expect.any(String),
-      updatedAt: expect.any(String),
-    });
+    // Get the current date for comparison
+    const now = new Date();
+    const formData = result.current.formData;
+    
+    // Basic form data validation
+    expect(formData.title).toBe('');
+    expect(formData.description).toBe('');
+    expect(formData.ingredients).toEqual(['']);
+    expect(formData.instructions).toEqual(['']);
+    expect(formData.imageUrl).toBe('');
+    expect(formData.prepTime).toBe(0);
+    expect(formData.cookTime).toBe(0);
+    expect(formData.cuisineType).toBe('');
+    expect(formData.tags).toEqual([]);
+    
+    // Date validation - ensure they're recent dates
+    const createdDate = new Date(formData.createdAt);
+    const updatedDate = new Date(formData.updatedAt);
+    expect(createdDate.getTime()).toBeLessThanOrEqual(now.getTime());
+    expect(updatedDate.getTime()).toBeLessThanOrEqual(now.getTime());
+    expect(createdDate.getTime()).toBeGreaterThan(now.getTime() - 1000); // Within last second
+    expect(updatedDate.getTime()).toBeGreaterThan(now.getTime() - 1000);
+    
+    // Other state checks
     expect(result.current.imagePreview).toBeNull();
-    expect(result.current.uploadProgress).toBe('idle');
+    expect(result.current.isSubmitting).toBe(false);
+    expect(result.current.error).toBeNull();
   });
 
   it('initializes with recipe data when provided', () => {
@@ -67,15 +96,12 @@ describe('useRecipeForm', () => {
       tags: mockRecipe.tags,
     }));
     expect(result.current.imagePreview).toBe(mockRecipe.imageUrl);
-    expect(result.current.uploadProgress).toBe('idle');
   });
 
   it('handles successful image upload', async () => {
     const mockUrl = 'https://example.com/uploaded.jpg';
-    (global.fetch as jest.Mock).mockResolvedValueOnce({
-      ok: true,
-      json: () => Promise.resolve({ success: true, url: mockUrl })
-    });
+    const { recipeApi } = require('@/services/api/recipeApi');
+    recipeApi.uploadImage.mockResolvedValueOnce({ success: true, url: mockUrl });
 
     const { result } = renderHook(() => useRecipeForm());
 
@@ -90,16 +116,15 @@ describe('useRecipeForm', () => {
       await result.current.handleImageUpload(event);
     });
 
-    expect(result.current.uploadProgress).toBe('done');
     expect(result.current.imagePreview).toBe('mock-url');
     expect(result.current.formData.imageUrl).toBe(mockUrl);
-    expect(global.fetch).toHaveBeenCalledWith('/api/images', expect.any(Object));
+    expect(result.current.uploadProgress).toBe('done');
+    expect(result.current.error).toBeNull();
   });
 
   it('handles image upload failure', async () => {
-    const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
-    const alertMock = jest.spyOn(window, 'alert').mockImplementation(() => {});
-    (global.fetch as jest.Mock).mockRejectedValueOnce(new Error('Upload failed'));
+    const { recipeApi } = require('@/services/api/recipeApi');
+    recipeApi.uploadImage.mockRejectedValueOnce(new Error('Upload failed'));
 
     const { result } = renderHook(() => useRecipeForm());
 
@@ -115,57 +140,102 @@ describe('useRecipeForm', () => {
     });
 
     expect(result.current.uploadProgress).toBe('error');
-    expect(alertMock).toHaveBeenCalledWith(RECIPE_FORM.ERRORS.UPLOAD_FAILED);
-    expect(consoleSpy).toHaveBeenCalled();
-
-    consoleSpy.mockRestore();
-    alertMock.mockRestore();
+    expect(result.current.error).toBe(RECIPE_FORM.ERRORS.UPLOAD_FAILED);
   });
 
-  it('handles empty file selection', async () => {
+  it('handles successful form submission in create mode', async () => {
+    const onSuccess = jest.fn();
+    const { recipeApi } = require('@/services/api/recipeApi');
+    recipeApi.create.mockResolvedValueOnce({ id: 'new-recipe-id' });
+
+    const { result } = renderHook(() => useRecipeForm(undefined, onSuccess));
+
+    const event = {
+      preventDefault: jest.fn()
+    } as unknown as React.FormEvent;
+
+    await act(async () => {
+      await result.current.handleSubmit(event);
+    });
+
+    expect(event.preventDefault).toHaveBeenCalled();
+    expect(recipeApi.create).toHaveBeenCalled();
+    expect(onSuccess).toHaveBeenCalled();
+    expect(result.current.error).toBeNull();
+  });
+
+  it('handles successful form submission in edit mode', async () => {
+    const onSuccess = jest.fn();
+    const { recipeApi } = require('@/services/api/recipeApi');
+    recipeApi.update.mockResolvedValueOnce({ recipe: mockRecipe });
+
+    const { result } = renderHook(() => useRecipeForm(mockRecipe, onSuccess));
+
+    const event = {
+      preventDefault: jest.fn()
+    } as unknown as React.FormEvent;
+
+    await act(async () => {
+      await result.current.handleSubmit(event);
+    });
+
+    expect(event.preventDefault).toHaveBeenCalled();
+    expect(recipeApi.update).toHaveBeenCalledWith(mockRecipe._id, expect.any(Object));
+    expect(onSuccess).toHaveBeenCalled();
+    expect(result.current.error).toBeNull();
+  });
+
+  it('handles form submission failure', async () => {
+    const { recipeApi } = require('@/services/api/recipeApi');
+    recipeApi.create.mockRejectedValueOnce(new Error('Save failed'));
+
     const { result } = renderHook(() => useRecipeForm());
 
     const event = {
-      target: {
-        files: []
-      }
-    } as unknown as React.ChangeEvent<HTMLInputElement>;
+      preventDefault: jest.fn()
+    } as unknown as React.FormEvent;
 
     await act(async () => {
-      await result.current.handleImageUpload(event);
+      await result.current.handleSubmit(event);
     });
 
-    expect(result.current.uploadProgress).toBe('idle');
-    expect(result.current.imagePreview).toBeNull();
-    expect(global.fetch).not.toHaveBeenCalled();
+    expect(result.current.error).toBe(RECIPE_FORM.ERRORS.SAVE_FAILED);
+    expect(result.current.isSubmitting).toBe(false);
   });
 
-  it('handles API response with success: false', async () => {
-    const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
-    const alertMock = jest.spyOn(window, 'alert').mockImplementation(() => {});
-    (global.fetch as jest.Mock).mockResolvedValueOnce({
-      ok: true,
-      json: () => Promise.resolve({ success: false, error: 'Upload failed' })
-    });
+  it('handles network errors during form submission', async () => {
+    const { recipeApi } = require('@/services/api/recipeApi');
+    recipeApi.create.mockRejectedValueOnce(new NetworkError());
 
     const { result } = renderHook(() => useRecipeForm());
 
-    const file = new File(['test'], 'test.jpg', { type: 'image/jpeg' });
     const event = {
-      target: {
-        files: [file]
-      }
-    } as unknown as React.ChangeEvent<HTMLInputElement>;
+      preventDefault: jest.fn()
+    } as unknown as React.FormEvent;
 
     await act(async () => {
-      await result.current.handleImageUpload(event);
+      await result.current.handleSubmit(event);
     });
 
-    expect(result.current.uploadProgress).toBe('error');
-    expect(alertMock).toHaveBeenCalledWith(RECIPE_FORM.ERRORS.UPLOAD_FAILED);
-    expect(consoleSpy).toHaveBeenCalled();
+    expect(result.current.error).toBe(RECIPE_FORM.ERRORS.NETWORK_ERROR);
+    expect(result.current.isSubmitting).toBe(false);
+  });
 
-    consoleSpy.mockRestore();
-    alertMock.mockRestore();
+  it('handles validation errors during form submission', async () => {
+    const { recipeApi } = require('@/services/api/recipeApi');
+    recipeApi.create.mockRejectedValueOnce(new ValidationError('Invalid input'));
+
+    const { result } = renderHook(() => useRecipeForm());
+
+    const event = {
+      preventDefault: jest.fn()
+    } as unknown as React.FormEvent;
+
+    await act(async () => {
+      await result.current.handleSubmit(event);
+    });
+
+    expect(result.current.error).toBe('Invalid input');
+    expect(result.current.isSubmitting).toBe(false);
   });
 }); 

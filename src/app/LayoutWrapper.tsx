@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { useState, useEffect } from 'react'
 import { AIFeaturesContext } from '@/context/AIFeaturesContext'
+import { LAYOUT } from '@/constants'
 
 interface LayoutWrapperProps {
   children: React.ReactNode;
@@ -34,13 +35,13 @@ export function LayoutWrapper({ children, caveatClassName }: LayoutWrapperProps)
             href="/" 
             className={`${caveatClassName} text-2xl font-bold hover:text-[#D1D8BE] transition-colors`}
           >
-            Recipe Book
+            {LAYOUT.APP_NAME}
           </Link>
           <div className="flex items-center gap-6">
             <div className="flex items-center gap-2">
               <span className="text-sm mr-2">
-                <span className="sm:hidden">AI</span>
-                <span className="hidden sm:inline">AI Assistant</span>
+                <span className="sm:hidden">{LAYOUT.AI_TOGGLE.SHORT}</span>
+                <span className="hidden sm:inline">{LAYOUT.AI_TOGGLE.FULL}</span>
               </span>
               <button
                 onClick={toggleAIFeatures}
@@ -73,7 +74,7 @@ export function LayoutWrapper({ children, caveatClassName }: LayoutWrapperProps)
                   d="M12 4v16m8-8H4"
                 />
               </svg>
-              <span className="hidden sm:inline">New Recipe +</span>
+              <span className="hidden sm:inline">{LAYOUT.NAVIGATION.NEW_RECIPE}</span>
             </Link>
           </div>
         </div>

@@ -16,6 +16,8 @@ describe('RecipeGrid', () => {
       cuisineType: 'Italian',
       tags: ['pasta', 'dinner'],
       description: 'A test recipe description',
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
     },
     {
       _id: '2',
@@ -28,6 +30,8 @@ describe('RecipeGrid', () => {
       cuisineType: 'Mexican',
       tags: ['quick', 'spicy'],
       description: 'Another test recipe description',
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
     },
   ];
 
@@ -51,17 +55,18 @@ describe('RecipeGrid', () => {
     expect(screen.getByText(`${RECIPE_GRID.TOTAL_TIME} 1h 15m`)).toBeInTheDocument();
     expect(screen.getByText(`${RECIPE_GRID.TOTAL_TIME} 45m`)).toBeInTheDocument();
 
-    // Check if tags are rendered
-    expect(screen.getByText('pasta')).toBeInTheDocument();
-    expect(screen.getByText('dinner')).toBeInTheDocument();
-    expect(screen.getByText('quick')).toBeInTheDocument();
-    expect(screen.getByText('spicy')).toBeInTheDocument();
+    // Check if tags are rendered with correct styling
+    const tags = screen.getAllByText(/(pasta|dinner|quick|spicy)/);
+    tags.forEach(tag => {
+      expect(tag).toHaveClass('bg-[#EEEFE0]', 'text-[#819A91]', 'px-2', 'py-0.5', 'rounded-full', 'text-sm', 'font-accent');
+    });
   });
 
   it('renders placeholder image when imageUrl is empty', () => {
     render(<RecipeGrid recipes={[mockRecipes[1]]} />);
     const placeholderSvg = document.querySelector('svg');
     expect(placeholderSvg).toBeInTheDocument();
+    expect(placeholderSvg).toHaveClass('h-12', 'w-12');
   });
 
   it('renders actual image when imageUrl is provided', () => {
@@ -69,5 +74,14 @@ describe('RecipeGrid', () => {
     const image = screen.getByAltText('Test Recipe 1');
     expect(image).toBeInTheDocument();
     expect(image).toHaveAttribute('src', expect.stringContaining('image1.jpg'));
+  });
+
+  it('renders recipe cards with correct styling', () => {
+    render(<RecipeGrid recipes={mockRecipes} />);
+    
+    const cards = screen.getAllByRole('link');
+    cards.forEach(card => {
+      expect(card).toHaveClass('border', 'border-[#D1D8BE]', 'rounded-lg', 'overflow-hidden', 'hover:shadow-lg', 'transition-shadow', 'bg-white');
+    });
   });
 }); 

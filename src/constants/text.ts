@@ -5,7 +5,7 @@ export const RECIPE_FORM = {
   INGREDIENT_PLACEHOLDER: 'Add ingredient',
   BUTTONS: {
     UPLOAD_IMAGE: 'Upload Image',
-    REMOVE_IMAGE: 'Remove',
+    REMOVE_IMAGE: 'Remove Image',
     ADD_INGREDIENT: '+ Add Ingredient',
     ADD_INSTRUCTION: '+ Add Instruction',
     SAVE_RECIPE: 'Save Recipe',
@@ -45,6 +45,10 @@ export const RECIPE_FORM = {
     SERVER_ERROR: 'Server error occurred. Please try again later.',
     AI_SERVICE_ERROR: 'AI service is currently unavailable. Please try again later.',
   },
+  ARIA_LABELS: {
+    PREP_TIME: 'Preparation time in minutes',
+    COOK_TIME: 'Cooking time in minutes',
+  },
 };
 
 export const RECIPE_FILTERS = {
@@ -72,4 +76,34 @@ export const RECIPE_GRID = {
 
 export const EDIT_RECIPE = {
   TITLE: 'Edit Recipe',
+};
+
+export const LAYOUT = {
+  APP_NAME: 'Recipe Book',
+  APP_DESCRIPTION: 'A personal recipe management system with AI-powered recommendations',
+  NAVIGATION: {
+    BACK_TO_RECIPES: 'Back to Recipes',
+    BACK_TO_RECIPE: 'Back to Recipe',
+    NEW_RECIPE: 'New Recipe +',
+  },
+  AI_TOGGLE: {
+    SHORT: 'AI',
+    FULL: 'AI Assistant',
+  },
+};
+
+export const RECIPE_PAGE = {
+  METADATA: {
+    NOT_FOUND: 'Recipe Not Found',
+  },
+  LABELS: {
+    PREP: 'Prep:',
+    COOK: 'Cook:',
+    TOTAL: 'Total:',
+    INGREDIENTS: 'Ingredients',
+    INSTRUCTIONS: 'Instructions',
+  },
+  UNITS: {
+    MINUTES: 'min',
+  },
 }; 
