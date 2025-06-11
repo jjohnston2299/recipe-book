@@ -1,17 +1,31 @@
 import { getDb } from '@/lib/mongodb';
-import { ObjectId } from 'mongodb';
+import { ObjectId, WithId, Document } from 'mongodb';
 import { Recipe } from '@/types/recipe';
 
+interface RecipeDocument extends WithId<Document> {
+  title: string;
+  ingredients: string[];
+  instructions: string[];
+  imageUrl?: string;
+  prepTime: number;
+  cookTime: number;
+  cuisineType: string;
+  tags?: string[];
+  description?: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
 // Helper function to format recipe dates
-function formatRecipeDates(recipe: any): Recipe {
+function formatRecipeDates(recipe: RecipeDocument): Recipe {
   return {
     ...recipe,
     _id: recipe._id.toString(),
     description: recipe.description || '',
     imageUrl: recipe.imageUrl || '',
     tags: recipe.tags || [],
-    createdAt: recipe.createdAt instanceof Date ? recipe.createdAt.toISOString() : new Date(recipe.createdAt).toISOString(),
-    updatedAt: recipe.updatedAt instanceof Date ? recipe.updatedAt.toISOString() : new Date(recipe.updatedAt).toISOString()
+    createdAt: recipe.createdAt.toISOString(),
+    updatedAt: recipe.updatedAt.toISOString()
   } as Recipe;
 }
 
@@ -54,7 +68,7 @@ export async function getRecipe(id: string): Promise<Recipe | null> {
       return null;
     }
 
-    return formatRecipeDates(recipe);
+    return formatRecipeDates(recipe as RecipeDocument);
   } catch (error) {
     console.error('Error fetching recipe:', error);
     return null;
@@ -70,7 +84,12 @@ export async function getRecipes(filters?: {
 }) {
   try {
     const db = await getDb();
-    let query: any = {};
+    const query: {
+      title?: { $regex: string; $options: string };
+      cuisineType?: string;
+      $expr?: { $lte: [{ $add: [string, string] }, number] };
+      tags?: { $all: string[] };
+    } = {};
 
     if (filters) {
       if (filters.searchQuery) {
@@ -94,7 +113,7 @@ export async function getRecipes(filters?: {
       .sort({ createdAt: -1 })
       .toArray();
 
-    return recipes.map(formatRecipeDates);
+    return recipes.map(recipe => formatRecipeDates(recipe as RecipeDocument));
   } catch (error) {
     console.error('Error fetching recipes:', error);
     throw error;
@@ -160,7 +179,7 @@ export async function updateRecipe(id: string, updates: Partial<Recipe>) {
       throw new Error('Recipe not found');
     }
 
-    return formatRecipeDates(result);
+    return formatRecipeDates(result as RecipeDocument);
   } catch (error) {
     console.error('Error updating recipe:', error);
     throw error;

@@ -2,6 +2,7 @@ import { renderHook, act } from '@testing-library/react';
 import { useRecipeForm } from './useRecipeForm';
 import { RECIPE_FORM } from '@/constants';
 import { NetworkError, ValidationError } from '@/services/api/errors';
+import { recipeApi } from '@/services/api/recipeApi';
 
 // Mock global fetch
 global.fetch = jest.fn();
@@ -100,7 +101,6 @@ describe('useRecipeForm', () => {
 
   it('handles successful image upload', async () => {
     const mockUrl = 'https://example.com/uploaded.jpg';
-    const { recipeApi } = require('@/services/api/recipeApi');
     recipeApi.uploadImage.mockResolvedValueOnce({ success: true, url: mockUrl });
 
     const { result } = renderHook(() => useRecipeForm());
@@ -123,7 +123,6 @@ describe('useRecipeForm', () => {
   });
 
   it('handles image upload failure', async () => {
-    const { recipeApi } = require('@/services/api/recipeApi');
     recipeApi.uploadImage.mockRejectedValueOnce(new Error('Upload failed'));
 
     const { result } = renderHook(() => useRecipeForm());
@@ -145,7 +144,6 @@ describe('useRecipeForm', () => {
 
   it('handles successful form submission in create mode', async () => {
     const onSuccess = jest.fn();
-    const { recipeApi } = require('@/services/api/recipeApi');
     recipeApi.create.mockResolvedValueOnce({ id: 'new-recipe-id' });
 
     const { result } = renderHook(() => useRecipeForm(undefined, onSuccess));
@@ -166,7 +164,6 @@ describe('useRecipeForm', () => {
 
   it('handles successful form submission in edit mode', async () => {
     const onSuccess = jest.fn();
-    const { recipeApi } = require('@/services/api/recipeApi');
     recipeApi.update.mockResolvedValueOnce({ recipe: mockRecipe });
 
     const { result } = renderHook(() => useRecipeForm(mockRecipe, onSuccess));
@@ -186,7 +183,6 @@ describe('useRecipeForm', () => {
   });
 
   it('handles form submission failure', async () => {
-    const { recipeApi } = require('@/services/api/recipeApi');
     recipeApi.create.mockRejectedValueOnce(new Error('Save failed'));
 
     const { result } = renderHook(() => useRecipeForm());
@@ -204,7 +200,6 @@ describe('useRecipeForm', () => {
   });
 
   it('handles network errors during form submission', async () => {
-    const { recipeApi } = require('@/services/api/recipeApi');
     recipeApi.create.mockRejectedValueOnce(new NetworkError());
 
     const { result } = renderHook(() => useRecipeForm());
@@ -222,7 +217,6 @@ describe('useRecipeForm', () => {
   });
 
   it('handles validation errors during form submission', async () => {
-    const { recipeApi } = require('@/services/api/recipeApi');
     recipeApi.create.mockRejectedValueOnce(new ValidationError('Invalid input'));
 
     const { result } = renderHook(() => useRecipeForm());

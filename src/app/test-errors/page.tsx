@@ -14,7 +14,7 @@ export default function TestErrorsPage() {
     try {
       // Using a non-existent endpoint to trigger network error
       await fetch('http://localhost:1234/non-existent');
-    } catch (error) {
+    } catch {
       setError(RECIPE_FORM.ERRORS.NETWORK_ERROR);
     } finally {
       setLoading(false);
@@ -39,7 +39,7 @@ export default function TestErrorsPage() {
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       });
-    } catch (error) {
+    } catch {
       setError(RECIPE_FORM.ERRORS.VALIDATION_ERROR);
     } finally {
       setLoading(false);
@@ -52,7 +52,7 @@ export default function TestErrorsPage() {
     try {
       // Using non-existent recipe ID
       await fetch('/api/recipes/non-existent-id');
-    } catch (error) {
+    } catch {
       setError('Recipe not found');
     } finally {
       setLoading(false);
@@ -69,7 +69,7 @@ export default function TestErrorsPage() {
         ingredients: [],
         instructions: []
       });
-    } catch (error) {
+    } catch {
       setError(RECIPE_FORM.ERRORS.AI_SERVICE_ERROR);
     } finally {
       setLoading(false);
@@ -83,7 +83,7 @@ export default function TestErrorsPage() {
       // Create an invalid file object
       const invalidFile = new File([""], "test.txt", { type: "text/plain" });
       await recipeApi.uploadImage(invalidFile);
-    } catch (error) {
+    } catch {
       setError(RECIPE_FORM.ERRORS.UPLOAD_FAILED);
     } finally {
       setLoading(false);

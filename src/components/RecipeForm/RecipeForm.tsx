@@ -1,7 +1,6 @@
 'use client';
 
 import Image from 'next/image';
-import { useAIFeatures } from '@/context/AIFeaturesContext';
 import { RecipeFormProps } from '@/types/recipe';
 import { RECIPE_FORM } from '@/constants';
 import Link from 'next/link';
@@ -11,7 +10,6 @@ import { useRecipeAI } from '@/hooks/useRecipeAI';
 import { LAYOUT } from '@/constants';
 
 export default function RecipeForm({ recipe, onSuccess }: RecipeFormProps) {
-  const showAIFeatures = useAIFeatures();
   const {
     formData,
     setFormData,

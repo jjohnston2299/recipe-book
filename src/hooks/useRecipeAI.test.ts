@@ -2,6 +2,7 @@ import { renderHook, act } from '@testing-library/react';
 import { useRecipeAI } from './useRecipeAI';
 import { RECIPE_FORM } from '@/constants';
 import { NetworkError, AIServiceError } from '@/services/api/errors';
+import { recipeApi } from '@/services/api/recipeApi';
 
 // Mock recipeApi
 jest.mock('@/services/api/recipeApi', () => ({
@@ -47,7 +48,6 @@ describe('useRecipeAI', () => {
   describe('generateDescription', () => {
     it('handles successful description generation', async () => {
       const generatedDescription = 'AI generated description';
-      const { recipeApi } = require('@/services/api/recipeApi');
       recipeApi.ai.generateDescription.mockResolvedValueOnce({ description: generatedDescription });
 
       const { result } = renderHook(() => useRecipeAI(mockFormData, mockSetFormData));
@@ -78,7 +78,6 @@ describe('useRecipeAI', () => {
     });
 
     it('handles API error', async () => {
-      const { recipeApi } = require('@/services/api/recipeApi');
       recipeApi.ai.generateDescription.mockRejectedValueOnce(new Error('API Error'));
 
       const { result } = renderHook(() => useRecipeAI(mockFormData, mockSetFormData));
@@ -92,7 +91,6 @@ describe('useRecipeAI', () => {
     });
 
     it('handles network error', async () => {
-      const { recipeApi } = require('@/services/api/recipeApi');
       recipeApi.ai.generateDescription.mockRejectedValueOnce(new NetworkError());
 
       const { result } = renderHook(() => useRecipeAI(mockFormData, mockSetFormData));
@@ -106,7 +104,6 @@ describe('useRecipeAI', () => {
     });
 
     it('handles AI service error', async () => {
-      const { recipeApi } = require('@/services/api/recipeApi');
       recipeApi.ai.generateDescription.mockRejectedValueOnce(new AIServiceError('AI service failed'));
 
       const { result } = renderHook(() => useRecipeAI(mockFormData, mockSetFormData));
@@ -123,7 +120,6 @@ describe('useRecipeAI', () => {
   describe('generateTags', () => {
     it('handles successful tag generation', async () => {
       const generatedTags = ['healthy', 'quick'];
-      const { recipeApi } = require('@/services/api/recipeApi');
       recipeApi.ai.generateTags.mockResolvedValueOnce({ tags: generatedTags });
 
       const { result } = renderHook(() => useRecipeAI(mockFormData, mockSetFormData));
@@ -154,7 +150,6 @@ describe('useRecipeAI', () => {
     });
 
     it('handles API error', async () => {
-      const { recipeApi } = require('@/services/api/recipeApi');
       recipeApi.ai.generateTags.mockRejectedValueOnce(new Error('API Error'));
 
       const { result } = renderHook(() => useRecipeAI(mockFormData, mockSetFormData));
@@ -180,7 +175,6 @@ describe('useRecipeAI', () => {
     };
 
     it('handles successful complete recipe generation', async () => {
-      const { recipeApi } = require('@/services/api/recipeApi');
       recipeApi.ai.generateComplete.mockResolvedValueOnce({ recipe: generatedRecipe });
 
       const { result } = renderHook(() => useRecipeAI(mockFormData, mockSetFormData));
@@ -207,7 +201,6 @@ describe('useRecipeAI', () => {
     });
 
     it('handles API error', async () => {
-      const { recipeApi } = require('@/services/api/recipeApi');
       recipeApi.ai.generateComplete.mockRejectedValueOnce(new Error('API Error'));
 
       const { result } = renderHook(() => useRecipeAI(mockFormData, mockSetFormData));

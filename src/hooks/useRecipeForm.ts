@@ -91,7 +91,7 @@ export function useRecipeForm(recipe?: Recipe, onSuccess?: () => void): UseRecip
           router.refresh();
         }
       } else {
-        const result = await recipeApi.create(cleanedData);
+        await recipeApi.create(cleanedData);
         if (onSuccess) {
           onSuccess();
         } else {
