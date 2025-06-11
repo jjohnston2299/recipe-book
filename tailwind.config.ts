@@ -8,8 +8,26 @@ const config: Config = {
   ],
   theme: {
     extend: {
+      colors: {
+        primary: {
+          DEFAULT: '#819A91',
+          hover: '#A7C1A8',
+          dark: '#4A5A53',
+        },
+        secondary: {
+          DEFAULT: '#D1D8BE',
+          light: '#EEEFE0',
+          lighter: '#F5F6F0',
+        },
+        error: {
+          DEFAULT: '#EF4444',
+          hover: '#DC2626',
+        }
+      },
       fontFamily: {
-        'edu-sa': ['var(--font-edu-sa)'],
+        'sans': ['var(--font-dm-sans)', 'system-ui', 'sans-serif'],
+        'display': ['var(--font-lora)', 'serif'],
+        'accent': ['var(--font-outfit)', 'system-ui', 'sans-serif'],
       },
       backgroundImage: {
         'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',

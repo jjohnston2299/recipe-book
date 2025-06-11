@@ -295,7 +295,7 @@ export default function Form({
                     newInstructions[index] = e.target.value;
                     setFormData({ ...formData, instructions: newInstructions });
                   }}
-                  className="w-full rounded-md border-[#D1D8BE] focus:ring-2 focus:ring-[#4A5A53] focus:border-[#4A5A53] text-[#4A5A53] bg-[#F5F6F0] placeholder-[#A7C1A8] focus:outline-none selection:bg-[#819A91] selection:text-white"
+                  className="w-full rounded-md border-secondary focus:ring-2 focus:ring-primary-dark focus:border-primary-dark text-primary-dark bg-secondary-lighter placeholder-primary-hover focus:outline-none selection:bg-primary selection:text-white min-h-[38px] h-auto resize-none overflow-y-hidden"
                   placeholder={`Step ${index + 1}`}
                   required
                 />
@@ -305,7 +305,7 @@ export default function Form({
                     const newInstructions = formData.instructions.filter((_, i) => i !== index);
                     setFormData({ ...formData, instructions: newInstructions });
                   }}
-                  className="text-[#A7C1A8] hover:text-[#819A91] cursor-pointer"
+                  className="text-primary-hover hover:text-primary cursor-pointer"
                 >
                   ×
                 </button>
