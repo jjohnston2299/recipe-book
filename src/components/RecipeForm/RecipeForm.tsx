@@ -49,7 +49,7 @@ export default function RecipeForm({ recipe, onSuccess }: RecipeFormProps) {
         </div>
       </div>
     );
-  }
+    }
 
   return (
     <div className="max-w-4xl mx-auto">
@@ -58,44 +58,44 @@ export default function RecipeForm({ recipe, onSuccess }: RecipeFormProps) {
           href={recipe ? `/recipes/${recipe._id}` : '/'}
           className="inline-flex items-center text-[#819A91] hover:text-[#A7C1A8]"
         >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
             className="h-7 w-7 sm:h-5 sm:w-5 sm:mr-1"
             viewBox="0 0 20 20"
             fill="currentColor"
-          >
-            <path
+              >
+                <path
               fillRule="evenodd"
               d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z"
               clipRule="evenodd"
-            />
-          </svg>
+                />
+              </svg>
           <span className="hidden sm:inline">Back to Recipe</span>
         </Link>
         <div className="flex gap-4">
-          <label className="bg-[#819A91] text-white px-4 py-2 rounded-md hover:bg-[#A7C1A8] cursor-pointer transition-colors">
-            {RECIPE_FORM.BUTTONS.UPLOAD_IMAGE}
-            <input
-              type="file"
-              accept="image/*"
-              onChange={handleImageUpload}
-              className="hidden"
-            />
-          </label>
-          {imagePreview && (
-            <button
-              type="button"
-              onClick={() => {
-                setImagePreview(null);
-                setFormData(prev => ({ ...prev, imageUrl: '' }));
-              }}
-              className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600 transition-colors"
-            >
-              {RECIPE_FORM.BUTTONS.REMOVE_IMAGE}
-            </button>
-          )}
+            <label className="bg-[#819A91] text-white px-4 py-2 rounded-md hover:bg-[#A7C1A8] cursor-pointer transition-colors">
+              {RECIPE_FORM.BUTTONS.UPLOAD_IMAGE}
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleImageUpload}
+                className="hidden"
+              />
+            </label>
+            {imagePreview && (
+              <button
+                type="button"
+                onClick={() => {
+                  setImagePreview(null);
+                  setFormData(prev => ({ ...prev, imageUrl: '' }));
+                }}
+                className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600 transition-colors"
+              >
+                {RECIPE_FORM.BUTTONS.REMOVE_IMAGE}
+              </button>
+            )}
+          </div>
         </div>
-      </div>
 
       <div className="bg-white rounded-lg shadow-lg overflow-hidden border border-[#D1D8BE]">
         <div className="relative aspect-video">
@@ -123,9 +123,9 @@ export default function RecipeForm({ recipe, onSuccess }: RecipeFormProps) {
                   d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
                 />
               </svg>
-            </div>
-          )}
-        </div>
+              </div>
+            )}
+          </div>
 
         <Form
           formData={formData}

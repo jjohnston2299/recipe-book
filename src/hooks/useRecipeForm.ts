@@ -4,6 +4,8 @@ import { useState, FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import { Recipe } from '@/types/recipe';
 import { RECIPE_FORM } from '@/constants';
+import { recipeApi } from '@/services/api/recipeApi';
+import { isAPIError, NetworkError } from '@/services/api/errors';
 
 type FormData = Omit<Recipe, '_id'>;
 
@@ -16,31 +18,30 @@ type UseRecipeFormReturn = {
   setFormData: React.Dispatch<React.SetStateAction<FormData>>;
   isSubmitting: boolean;
   handleSubmit: (e: FormEvent) => Promise<void>;
+  error: string | null;
+};
+
+const initialFormData: FormData = {
+  title: '',
+  description: '',
+  ingredients: [''],
+  instructions: [''],
+  imageUrl: '',
+  prepTime: 0,
+  cookTime: 0,
+  cuisineType: '',
+  tags: [],
+  createdAt: new Date().toISOString(),
+  updatedAt: new Date().toISOString(),
 };
 
 export function useRecipeForm(recipe?: Recipe, onSuccess?: () => void): UseRecipeFormReturn {
   const router = useRouter();
-  const [formData, setFormData] = useState<FormData>(
-    recipe || {
-      title: '',
-      description: '',
-      ingredients: [''],
-      instructions: [''],
-      imageUrl: '',
-      prepTime: 0,
-      cookTime: 0,
-      cuisineType: '',
-      tags: [],
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    }
-  );
-
-  const [imagePreview, setImagePreview] = useState<string | null>(
-    recipe?.imageUrl || null
-  );
+  const [formData, setFormData] = useState<FormData>(recipe || initialFormData);
+  const [imagePreview, setImagePreview] = useState<string | null>(recipe?.imageUrl || null);
   const [uploadProgress, setUploadProgress] = useState<'idle' | 'uploading' | 'done' | 'error'>('idle');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -49,38 +50,30 @@ export function useRecipeForm(recipe?: Recipe, onSuccess?: () => void): UseRecip
     const previewUrl = URL.createObjectURL(file);
     setImagePreview(previewUrl);
     setUploadProgress('uploading');
+    setError(null);
 
     try {
-      const formData = new FormData();
-      formData.append('file', file);
-
-      const response = await fetch('/api/images', {
-        method: 'POST',
-        body: formData,
-      });
-
-      if (!response.ok) {
-        throw new Error(RECIPE_FORM.ERRORS.UPLOAD_FAILED);
-      }
-
-      const result = await response.json();
-
-      if (!result.success) {
-        throw new Error(result.error || RECIPE_FORM.ERRORS.UPLOAD_FAILED);
-      }
-
+      const result = await recipeApi.uploadImage(file);
       setFormData(prev => ({ ...prev, imageUrl: result.url }));
       setUploadProgress('done');
     } catch (error) {
       console.error('Error uploading image:', error);
       setUploadProgress('error');
-      alert(RECIPE_FORM.ERRORS.UPLOAD_FAILED);
+      
+      if (error instanceof NetworkError) {
+        setError(RECIPE_FORM.ERRORS.NETWORK_ERROR);
+      } else if (isAPIError(error)) {
+        setError(error.message);
+      } else {
+        setError(RECIPE_FORM.ERRORS.UPLOAD_FAILED);
+      }
     }
   };
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
+    setError(null);
 
     try {
       const cleanedData = {
@@ -89,34 +82,32 @@ export function useRecipeForm(recipe?: Recipe, onSuccess?: () => void): UseRecip
         instructions: formData.instructions.filter(i => i.trim()),
       };
 
-      const url = recipe ? `/api/recipes/${recipe._id}` : '/api/recipes';
-      const method = recipe ? 'PUT' : 'POST';
-
-      const response = await fetch(url, {
-        method,
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(cleanedData),
-      });
-
-      if (!response.ok) {
-        throw new Error(RECIPE_FORM.ERRORS.SAVE_FAILED);
-      }
-
-      if (onSuccess) {
-        onSuccess();
-      } else {
-        if (recipe) {
+      if (recipe) {
+        await recipeApi.update(recipe._id, cleanedData);
+        if (onSuccess) {
+          onSuccess();
+        } else {
           router.push(`/recipes/${recipe._id}`);
+          router.refresh();
+        }
+      } else {
+        const result = await recipeApi.create(cleanedData);
+        if (onSuccess) {
+          onSuccess();
         } else {
           router.push('/');
+          router.refresh();
         }
-        router.refresh();
       }
     } catch (error) {
       console.error('Error saving recipe:', error);
-      alert(RECIPE_FORM.ERRORS.SAVE_FAILED);
+      if (error instanceof NetworkError) {
+        setError(RECIPE_FORM.ERRORS.NETWORK_ERROR);
+      } else if (isAPIError(error)) {
+        setError(error.message);
+      } else {
+        setError(RECIPE_FORM.ERRORS.SAVE_FAILED);
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -131,5 +122,6 @@ export function useRecipeForm(recipe?: Recipe, onSuccess?: () => void): UseRecip
     setFormData,
     isSubmitting,
     handleSubmit,
+    error,
   };
 } 

@@ -3,6 +3,8 @@
 import { useState } from 'react';
 import { Recipe } from '@/types/recipe';
 import { RECIPE_FORM } from '@/constants';
+import { recipeApi } from '@/services/api/recipeApi';
+import { isAPIError, NetworkError, AIServiceError } from '@/services/api/errors';
 
 type FormData = Omit<Recipe, '_id'>;
 
@@ -13,6 +15,7 @@ type UseRecipeAIReturn = {
   generateDescription: () => Promise<void>;
   generateTags: () => Promise<void>;
   generateCompleteRecipe: () => Promise<void>;
+  error: string | null;
 };
 
 export function useRecipeAI(
@@ -22,72 +25,70 @@ export function useRecipeAI(
   const [isGeneratingDesc, setIsGeneratingDesc] = useState(false);
   const [isGeneratingTags, setIsGeneratingTags] = useState(false);
   const [isGeneratingComplete, setIsGeneratingComplete] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const validateRequiredFields = () => {
+    if (!formData.title || formData.ingredients.length === 0 || formData.instructions.length === 0) {
+      setError(RECIPE_FORM.ERRORS.MISSING_FIELDS);
+      return false;
+    }
+    return true;
+  };
+
+  const handleAIError = (error: unknown, defaultMessage: string) => {
+    console.error('AI service error:', error);
+    if (error instanceof NetworkError) {
+      setError(RECIPE_FORM.ERRORS.NETWORK_ERROR);
+    } else if (error instanceof AIServiceError) {
+      setError(RECIPE_FORM.ERRORS.AI_SERVICE_ERROR);
+    } else if (isAPIError(error)) {
+      setError(error.message);
+    } else {
+      setError(defaultMessage);
+    }
+  };
 
   const generateDescription = async () => {
-    if (!formData.title || formData.ingredients.length === 0 || formData.instructions.length === 0) {
-      alert(RECIPE_FORM.ERRORS.MISSING_FIELDS);
-      return;
-    }
-
+    if (!validateRequiredFields()) return;
     setIsGeneratingDesc(true);
+    setError(null);
 
     try {
-      const response = await fetch('/api/ai', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          action: 'generate-description',
-          title: formData.title,
-          ingredients: formData.ingredients.filter(i => i.trim()),
-          instructions: formData.instructions.filter(i => i.trim())
-        })
+      const data = await recipeApi.ai.generateDescription({
+        title: formData.title,
+        ingredients: formData.ingredients.filter(i => i.trim()),
+        instructions: formData.instructions.filter(i => i.trim())
       });
-
-      if (!response.ok) throw new Error(RECIPE_FORM.ERRORS.GENERATE_DESCRIPTION_FAILED);
-      const { description } = await response.json();
 
       setFormData(prev => ({
         ...prev,
-        description
+        description: data.description
       }));
     } catch (error) {
-      console.error('Error generating description:', error);
-      alert(RECIPE_FORM.ERRORS.GENERATE_DESCRIPTION_FAILED);
+      handleAIError(error, RECIPE_FORM.ERRORS.GENERATE_DESCRIPTION_FAILED);
     } finally {
       setIsGeneratingDesc(false);
     }
   };
 
   const generateTags = async () => {
-    if (!formData.title || formData.ingredients.length === 0 || formData.instructions.length === 0) {
-      alert(RECIPE_FORM.ERRORS.MISSING_FIELDS);
-      return;
-    }
-
+    if (!validateRequiredFields()) return;
     setIsGeneratingTags(true);
+    setError(null);
 
     try {
-      const response = await fetch('/api/ai', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          action: 'suggest-tags',
-          title: formData.title,
-          ingredients: formData.ingredients.filter(i => i.trim()),
-          instructions: formData.instructions.filter(i => i.trim())
-        })
+      const data = await recipeApi.ai.generateTags({
+        title: formData.title,
+        ingredients: formData.ingredients.filter(i => i.trim()),
+        instructions: formData.instructions.filter(i => i.trim())
       });
-
-      if (!response.ok) throw new Error(RECIPE_FORM.ERRORS.GENERATE_TAGS_FAILED);
-      const { tags } = await response.json();
 
       setFormData(prev => ({
         ...prev,
-        tags: [...new Set([...prev.tags, ...tags])].slice(0, 3)
+        tags: [...new Set([...prev.tags, ...data.tags])].slice(0, 3)
       }));
     } catch (error) {
-      console.error('Error generating tags:', error);
-      alert(RECIPE_FORM.ERRORS.GENERATE_TAGS_FAILED);
+      handleAIError(error, RECIPE_FORM.ERRORS.GENERATE_TAGS_FAILED);
     } finally {
       setIsGeneratingTags(false);
     }
@@ -95,38 +96,28 @@ export function useRecipeAI(
 
   const generateCompleteRecipe = async () => {
     if (!formData.title) {
-      alert(RECIPE_FORM.ERRORS.MISSING_TITLE);
+      setError(RECIPE_FORM.ERRORS.MISSING_TITLE);
       return;
     }
 
     setIsGeneratingComplete(true);
+    setError(null);
 
     try {
-      const response = await fetch('/api/ai', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          action: 'generate-complete',
-          title: formData.title
-        })
-      });
-
-      if (!response.ok) throw new Error(RECIPE_FORM.ERRORS.GENERATE_RECIPE_FAILED);
-      const { recipe: generatedRecipe } = await response.json();
+      const data = await recipeApi.ai.generateComplete(formData.title);
 
       setFormData(prev => ({
         ...prev,
-        description: generatedRecipe.description,
-        ingredients: generatedRecipe.ingredients,
-        instructions: generatedRecipe.instructions,
-        prepTime: generatedRecipe.prepTime,
-        cookTime: generatedRecipe.cookTime,
-        cuisineType: generatedRecipe.cuisineType,
-        tags: generatedRecipe.tags
+        description: data.recipe.description || prev.description,
+        ingredients: data.recipe.ingredients || prev.ingredients,
+        instructions: data.recipe.instructions || prev.instructions,
+        prepTime: data.recipe.prepTime || prev.prepTime,
+        cookTime: data.recipe.cookTime || prev.cookTime,
+        cuisineType: data.recipe.cuisineType || prev.cuisineType,
+        tags: data.recipe.tags || prev.tags
       }));
     } catch (error) {
-      console.error('Error generating complete recipe:', error);
-      alert(RECIPE_FORM.ERRORS.GENERATE_RECIPE_FAILED);
+      handleAIError(error, RECIPE_FORM.ERRORS.GENERATE_RECIPE_FAILED);
     } finally {
       setIsGeneratingComplete(false);
     }
@@ -139,5 +130,6 @@ export function useRecipeAI(
     generateDescription,
     generateTags,
     generateCompleteRecipe,
+    error,
   };
 } 

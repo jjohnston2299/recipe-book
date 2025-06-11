@@ -40,6 +40,10 @@ export const RECIPE_FORM = {
     GENERATE_RECIPE_FAILED: 'Failed to generate recipe. Please try again.',
     MISSING_TITLE: 'Please enter a recipe title first.',
     MISSING_FIELDS: 'Please fill in the title, ingredients, and instructions first.',
+    NETWORK_ERROR: 'Network error occurred. Please check your internet connection.',
+    VALIDATION_ERROR: 'Please check your input and try again.',
+    SERVER_ERROR: 'Server error occurred. Please try again later.',
+    AI_SERVICE_ERROR: 'AI service is currently unavailable. Please try again later.',
   },
 };
 
